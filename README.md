@@ -26,10 +26,28 @@ The identification of differentially expressed genes from RNA-seq data is instru
 Python 3 is required.
 
 ## Installation
-Clone or download this repository.
 
+1. Clone or download this repository.
 
-There are many model parameters in DENetwork, so they are not listed as optional arguments when running run_denetwork.py. They can manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
+2. Navigate to where DENetwork is downloaded and download required Python packages
+
+```bash
+$ python3 setup.py install
+```
+
+2. Run DESeq2
+
+<!-- ```bash
+$ python3 run_deseq2.py
+``` -->
+
+3. Run DENetwork
+
+```bash
+$ python3 run_denetwork.py  [-h] -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t TARGETS
+```
+
+There are many model parameters in DENetwork, so they are not listed as optional arguments when running run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
 
 ## Usage
 

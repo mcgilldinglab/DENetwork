@@ -189,7 +189,6 @@ class Graph:
 		# if not osp.exists('figures/' + self.name + '/S_Q'):
 		# 	os.makedirs('figures/' + self.name + '/S_Q')
 
-
 	
 	def update_all(self, prev_g, prev_paths, prev_paths_list):
 		# update node, edge, and path attributes
