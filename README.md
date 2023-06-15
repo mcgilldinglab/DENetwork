@@ -47,20 +47,25 @@ $ python3 run_deseq2.py
 2. Run DENetwork
 
 ```bash
-$ python3 run_denetwork.py  [-h] -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t TARGETS
+$ python3 run_deseq2.py -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
+```
 
-arguments:
+```bash
+usage: run_denetwork.py [-h] -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
+
+optional arguments:
   -h, --help            show this help message and exit
-  -n NAME, --name NAME
-                        name of the DENetwork model
+  -n NAME, --name NAME  name of the DENetwork model
   -d DEFILE, --defile DEFILE
                         file of differentially-expressed genes
   -g GENEFILE, --genefile GENEFILE
-                        file containing all genes, their (output result matrix from DESeq2)
+                        file containing all genes, their (output result matrix
+                        from DESeq2)
   -r RECEPFILE, --recepfile RECEPFILE
-  						file of disease-specific receptors
-  -t TARGETS, --targets TARGETS
-  						choose whether the targets are differentially-expressed genes (de) OR transcription factors (tf)
+                        file of disease-specific receptors
+  -t {de,tf}, --targets {de,tf}
+                        choose whether the targets are differentially-
+                        expressed genes (de) OR transcription factors (tf)
 ```
 
 There are many model parameters in DENetwork, so they are not listed as optional arguments when running run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
