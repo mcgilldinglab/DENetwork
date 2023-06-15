@@ -18,7 +18,7 @@ Unveiling Regulatory and Signaling Networks Behind Differentially Expressed Gene
 The identification of differentially expressed genes from RNA-seq data is instrumental for understanding the biological differences between sample groups. However, the focus on differential genes can overlook the potential primary drivers of these differences and viable intervention targets. Additionally, key non-differential regulators may be missed by standard RNA-seq differential gene analysis. To mitigate these limitations, we present DENetwork, an innovative approach that deciphers the regulatory and signaling networks responsible for transcriptomic variations between conditions with distinct phenotypes. This methodology augments conventional differential gene analysis tools, such as DESeq2, by embracing both differential and non-differential critical genes. Through applying DENetwork to diverse simulated and real datasets, we exhibit its efficacy in encapsulating biological differences, denoted by the relevance and statistical significance of enriched gene functional terms. As a robust tool, DENetwork systematically characterizes the biological mechanisms driving phenotypic differences, thus deepening our understanding of biological variations between conditions and aiding in the design of potent intervention strategies.
 
 <p align="center"> 
-  <img src="https://github.com/mcgilldinglab/DENetwork/blob/master/images/flowchart_final_compressed.svg" />
+  <img src="https://github.com/mcgilldinglab/DENetwork/blob/main/images/flowchart_final_compressed.svg" />
 </p>
 
 ## Required Packages
