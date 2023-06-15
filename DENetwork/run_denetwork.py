@@ -18,7 +18,7 @@ import pickle
 import os
 import os.path as osp
 from ast import literal_eval
-from model import Data, Graph, SignificantGenes
+from denetwork import Data, Graph, SignificantGenes
 import random
 import argparse
 from simple_tools import check_create_dir
@@ -142,7 +142,7 @@ def main():
 	parser.add_argument('-d', '--defile', required=True, help='file of differentially-expressed genes')
 	parser.add_argument('-g', '--genefile', required=True, help='file containing all genes, their (output result matrix from DESeq2)')
 	parser.add_argument('-r', '--recepfile', required=True, help='file of disease-specific receptors')
-	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes OR transcription factors', choices=['de', 'tf'])
+	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes (de) OR transcription factors (tf)', choices=['de', 'tf'])
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
