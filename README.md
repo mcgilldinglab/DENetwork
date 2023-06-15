@@ -2,7 +2,6 @@
 Unveiling Regulatory and Signaling Networks Behind Differentially Expressed Genes
 
 - [DENetwork](#denetwork)
-  * [Table of Contents](#table-of-contents)
   * [About](#about)
   * [Required Packages](#required-packages)
   * [Installation](#installation)
@@ -43,7 +42,7 @@ DENetwork is licensed under the terms of the MIT license.
 DENetwork was developed by the Ding Lab @ McGill University, and implemented by Ting-Yi Su.
 
 ## Contact
-jun.ding@mcgill.ca
-ting-yi.su@mail.mcgill.ca
+Jun Ding jun.ding@mcgill.ca
+Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## Citation
