@@ -41,10 +41,17 @@ def get_list_from_file(newline_delimited_file):
 		items = [line.strip() for line in f]
 	return items
 
+# for writing a list of strings to file
 def write_list_to_file(list_to_write, file):
 	with open(file, 'w') as f:
 		for item in list_to_write:
 			f.write(item + '\n')
+
+# for writing a list of tuples, integers, etc to file
+def write_list_to_file_convert_to_str(list_to_write, file):
+	with open(file, 'w') as f:
+		for item in list_to_write:
+			f.write(str(item) + '\n')
 
 # create dictionary with keys & lists as values
 def initialize_dict_of_lists(keys):

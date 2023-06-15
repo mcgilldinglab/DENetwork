@@ -24,72 +24,98 @@ import argparse
 from simple_tools import check_create_dir
 
 class RunModel:
-	def __init__(self, model_type_list, data_dir, recepfile):
-		'''
-		Types of models listed as 'target_type'_'DE_gene_type'_'disease_type'
-			- types of targets include 'TF' (transcription factors) or 'DE' (differentially expressed genes)
-			- types of DE genes include 'pos' (upregulated DE genes), 'neg' (downregulated DE genes), or 'all' (all DE genes)
-		'''
-		self.model_type_list = model_type_list # lists of types of models ('TF_pos_*', 'TF_neg_*', 'DE_pos_*', 'DE_neg_*', 'TF_all_*', 'DE_all_*'), * = disease
-		self.data_dir = data_dir
+	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile):
+		self.script_dir = script_dir
+		self.name = name
+		self.DEfile = DEfile
+		self.genefile = genefile
+		self.TFfile = TFfile # TFfile = '' if using DE genes as the targets
 		self.recepfile = recepfile
+		self.PPIfile = PPIfile
 
-	def run_all_models(self): # for experimental comparisons
-		# run each model type
-		for model_type in self.model_type_list:
-			print('RUNNING MODEL:', model_type, '----------------')
-			# initialize parameters
-			disease_name = model_type[7:]
-			DEfile = osp.join(self.data_dir, 'DE' + model_type[2:] + '.tsv')
-			genefile = osp.join(self.data_dir, '_'.join(['gene_log2fc', disease_name + '.tsv']))
-			TFfile = osp.join(self.data_dir, 'TFs.txt') # same for every disease (b/c are looking for enriched TFs)
-			recepfile = ''
-			if self.recepfile == '':
-				recepfile = osp.join(self.data_dir, '_'.join(['receptors', disease_name + '.txt']))
-			else:
-				recepfile = self.recepfile
-			PPIfile = osp.join(self.data_dir, 'ppi_ptm_pd_hgnc.txt') # also same for every disease
-			print('DE file:', DEfile)
-			print('gene file:', genefile)
-			print('receptor file:', recepfile)
-			# run model
-			if 'TF_' in model_type: # run with TFs as targets
-				self.run_model(model_type, DEfile, genefile, TFfile, recepfile, PPIfile)
-			elif 'DE_' in model_type: # run with DE genes as targets, put '' in the TFfile parameter
-				self.run_model(model_type, DEfile, genefile, '', recepfile, PPIfile)
-
-	def run_model(self, model_type, DEfile, genefile, TFfile, recepfile, PPIfile):
+	def run_model(self):
 
 		# initialize graph
-		g = Graph(model_type, DEfile, genefile, TFfile, recepfile, PPIfile)
-		targets = g.init_graph(True, 'FDR') # default is adjust p-values w/ FDR
+
+		g = Graph(self.script_dir, self.name, self.DEfile, self.genefile, self.TFfile, self.recepfile, self.PPIfile)
+
+		
+		# --------------------STEP 1--------------------
+		''' init_graph
+			adj = True/False, adjust p-values using FDR
+			adj_type = 'FDR'/'BON' (FDR or Bonferroni; multiple testing correction for p-values)
+			num_tfs = 'all'/int # of enriched TFs to select 
+			returns the targets of the network
+
+			default parameters: adj=True, adj_type='FDR', num_tfs='all'
+		'''
+		targets = g.init_graph() 
 		
 		# no model can be created if have no targets present
 		if targets == '':
 			print('No targets were found. Terminating program...')
 			return
 
-		# filter paths
-		g.filter_paths(5, True, 0.02)
 
-		# get top N paths
-		g.top_N_paths(5, True)
+		# --------------------STEP 2--------------------
+		''' filter paths
+			k = # of edges in path (only paths with k # of edges are kept) between source-target pairs
+			r = True/False, whether to run shortest_path, if 'False' will assume that shortest_paths.pickle exists within the 'files' directory
+			p_val = p-value cutoff for finding significant shortest paths
+			returns a new graph w/ candidate paths of p-value < p_val
+		'''
+		g.filter_paths(k=5, r=True, p_val=0.02)
 
+
+		# --------------------STEP 3--------------------
+		''' top_N_paths
+			N = number of top paths with the maximal path scores to keep
+			p = print graph info True/False
+		'''
+		g.top_N_paths(N=5, p=True)
+
+		
+		# --------------------STEP 4--------------------
+		''' best_signaling_network
+			i = total number of paths to remove one by one
+			j = current number of times function is called (should ALWAYS be -1 here when finding the local optimum); is used to distinguish whether the local or global optimum is being found
+			curve = shape of the graph, either 'concave' or 'convex'
+		'''
 		# get local optimum
-		g.best_signaling_network(50, -1, "concave")
+		g.best_signaling_network(i=50, j=-1, curve="concave")
 
 		# print info
 		g.print_info()
 
-		# get global optimum
-		# k, l, N, i_local, t, curve, direction, seed
-		g.optimal_graph(5, 8, 5, 50, 5, "concave", 0, 0.001) #default seed 0
+		# NOTE: the local optimal network will not change no matter how many times run_denetwork.py is run
+		# only the (near) global optimal network will be different at each run (due to random edges being added)
 
-		# rank nodes
+		# --------------------STEP 5--------------------
+		''' optimal_graph
+			k = # of edges allowed when finding the shortest path between source-target pairs
+			l = # of paths to keep for each source-target pair in filter_paths2
+			N = # of top paths to keep
+			i_local = total number of paths to remove one by one when finding the best local optimum solution
+			t = # of trys allowed if no improvement is seen at each continuous iteration
+			curve = 'concave'/'convex'; shape of plot in best_signaling_network
+			seed = size of random seed used to shuffle list of random edges
+			p = fraction of random edges to draw to total list of available edges
+		'''
+		g.optimal_graph(k=5, l=8, N=5, i_local=50, t=5, curve="concave", seed=0, p=0.001)
+
+		# --------------------STEP 6--------------------
+		''' rank_nodes
+			ranks the nodes in the (near) optimal solution from most important to least important, and writes them to file
+		'''
 		g.rank_nodes()
 
-		# get top 100 significant genes
-		sg = SignificantGenes(g, 100) # get 100 top siginificant genes
+
+		# --------------------STEP 7--------------------
+		''' SignificantGenes
+			g = object of (near) global optimum solution
+			n = number of significant genes to keep
+		'''
+		sg = SignificantGenes(g=g, n=100) 
 		sg.get_ranking()
 		sg.get_go()
 		sg.get_noa_sif()
@@ -110,10 +136,28 @@ def main():
 	check_create_dir(results_dir)
 
 	# input arguments
+	# name, DEfile, genefile, recepfile
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-d', '--data_dir')  #/home/tingyisu/scratch/modeller/files
-	parser.add_argument('-p', '--pdb_download_dir') # /home/tingyisu/scratch/pdb_cif
+	parser.add_argument('-n', '--name', required=True, help='name of the DENetwork model')  
+	parser.add_argument('-d', '--defile', required=True, help='file of differentially-expressed genes')
+	parser.add_argument('-g', '--genefile', required=True, help='file containing all genes, their (output result matrix from DESeq2)')
+	parser.add_argument('-r', '--recepfile', required=True, help='file of disease-specific receptors')
+	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes OR transcription factors', choices=['de', 'tf'])
 	args = parser.parse_args()
+
+	# TFfile and PPIfile are the same for all models
+	tffile = '' # DE genes as targets
+	if args.targets == 'tf': # TFs as targets
+		tffile = osp.join(data_dir, 'TFs.txt')
+	ppifile = osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt')
+
+	# script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile
+	r = RunModel(script_dir, args.name, args.defile, args.genefile, tffile, args.recepfile, ppifile)
+	r.run_model()
+
+
+if __name__=='__main__':
+	main()
 
 
 

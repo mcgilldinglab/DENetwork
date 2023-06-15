@@ -19,7 +19,7 @@ import os
 import os.path as osp
 from ast import literal_eval
 from statsmodels.stats.multitest import fdrcorrection
-from simple_tools import check_create_dir, pickle_load, pickle_dump
+from simple_tools import check_create_dir, pickle_load, pickle_dump, write_list_to_file_convert_to_str
 
 class Data:
 	def __init__(self, DEfile, genefile, TFfile, recepfile, PPIfile):
@@ -566,7 +566,8 @@ class Graph:
 	# STEP3: find the top N paths with the maximal path scores
 	def top_N_paths(self, N, p):
 		'''
-		p = print graph info T/F
+		N = number of top paths with the maximal path scores to keep
+		p = print graph info True/False
 		'''
 		original = self.num_paths
 		# calculate path score
@@ -603,8 +604,9 @@ class Graph:
 	# STEP4: build overall best signaling network (local optimal solution)
 	def best_signaling_network(self, i, j, curve):
 		'''
-		i = number of paths to remove
+		i = total number of paths to remove one by one
 		j = current number of times function is called
+		curve = shape of the graph, either 'concave' or 'convex'
 		'''
 
 		test_g = self.G.copy()
@@ -858,9 +860,9 @@ class Graph:
 						self.global_SQ = best_SQ
 						print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv)
 						# save optimal graph object
-						pickle_dump()
-						with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
-							pickle.dump(self, f)
+						pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
+						# with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
+						# 	pickle.dump(self, f)
 						stop = timeit.default_timer()
 						print('Time needed to find the optimal graph: ', stop - start)
 						self.improv_list = improv_list
@@ -887,8 +889,9 @@ class Graph:
 		self.global_SQ = best_SQ
 		print(improv_list, "current # no improvement:", num_no_improv, "total # no improvement:", total_num_no_improv)
 		# save optimal graph object
-		with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
-			pickle.dump(self, f)
+		pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
+		# with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
+		# 	pickle.dump(self, f)
 		stop = timeit.default_timer()
 		print('Time needed to find the optimal graph: ', stop - start)
 		self.improv_list = improv_list
@@ -910,16 +913,16 @@ class Graph:
 				for path in curr_paths:
 					score = 0.0
 					for i in range(len(path)-1):
-		#					 print(g.nodes[path[i]]['log2fc'], g.edges[path[i], path[i+1]]['ppi'])
 						score += float(G.nodes[path[i]]['log2fc']) + float(G.edges[path[i], path[i+1]]['ppi']) 
 					score +=  float(G.nodes[path[len(path) - 1]]['log2fc'])
-		#				 score = 2 ** score # was in log base 2
 					scores[receptor][target].append(score)
 					scores_list.append(score)
 			if not scores[receptor]: # empty
 				del cores[receptor]
 		return scores, scores_list
 
+	# use for ranking nodes
+	# removes a node from the graph
 	def remove_node(self, node):
 		original = copy.deepcopy(self.G)
 		original.remove_node(node)
@@ -929,10 +932,10 @@ class Graph:
 		SQ = (sum(scores) - self.global_lambda_pen * (sum(d for _, d in original.degree)/original.number_of_nodes()))
 		return (node, SQ)
 
+	# final step: rank nodes in the (near) global optimal graph
 	def rank_nodes(self):
 		'''
 		returns a ranking of nodes from most important to least important
-		n = number of top nodes to return
 		'''
 		_, scores = self.calculate_path_score()
 		# case where didn't run optimal_graph
@@ -940,6 +943,9 @@ class Graph:
 			self.global_lambda_pen = self.local_lambda_pen
 		global_SQ = (sum(scores) - self.global_lambda_pen * (sum(d for _, d in self.G.degree)/self.G.number_of_nodes()))
 		print('Global S(Q) (calculated using global lambda penalty):', global_SQ)
+
+		# use Pool for parallel processing
+		# time amount of time it takes
 		start = timeit.default_timer()
 		p = Pool()
 		SQ_scores = p.map(self.remove_node, self.nodes)
@@ -947,25 +953,33 @@ class Graph:
 		p.join()
 		stop = timeit.default_timer()
 		print('Time needed to rank nodes: ', stop - start)
+
 		SQ_score_differences = []
 		for (gene, score) in SQ_scores:
 			SQ_score_differences.append((gene, score - global_SQ))
 		SQ_score_differences.sort(key = lambda x: x[1], reverse=False)
 		SQ_scores.sort(key = lambda x: x[1], reverse=False)
-		# SQ_scores.sort(key = lambda x: x[1])
+
 		# write to files folder
-		score_differences_f = 'files/' + self.name + '/nodes_ranking_score_differences_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
-		scores_f = 'files/' + self.name + '/nodes_ranking_scores_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
-		with open(score_differences_f, 'w') as f_diff, open(scores_f, 'w') as f_scores:
-			for tup in SQ_scores:
-				f_scores.write(str(tup) + '\n')
-			for tup in SQ_score_differences:
-				f_diff.write(str(tup) + '\n')
+		score_differences_f = osp.join(self.files_dir, '_'.join(['nodes_ranking_score_differences', str(self.l), str(self.N), str(self.t) + '.txt']))
+		scores_f = osp.join(self.files_dir, '_'.join(['nodes_ranking_scores', str(self.l), str(self.N), str(self.t) + '.txt']))
+
+		# score_differences_f = 'files/' + self.name + '/nodes_ranking_score_differences_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
+		# scores_f = 'files/' + self.name + '/nodes_ranking_scores_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
+		
+		write_list_to_file_convert_to_str(SQ_scores, scores_f)
+		write_list_to_file_convert_to_str(SQ_score_differences, score_differences_f)
+
+		# with open(score_differences_f, 'w') as f_diff, open(scores_f, 'w') as f_scores:
+		# 	for tup in SQ_scores:
+		# 		f_scores.write(str(tup) + '\n')
+		# 	for tup in SQ_score_differences:
+		# 		f_diff.write(str(tup) + '\n')
 		return (SQ_score_differences)
 
 class SignificantGenes:
-	def __init__(self, g, n):
-		self.g = g
+	def __init__(self, script_dir, g, n):
+		self.g = g # (near) optimal graph
 		self.n = n # number of significant nodes to keep
 		self.nodes = []
 		self.node_score = {} # key = nodes, value = score
@@ -974,23 +988,24 @@ class SignificantGenes:
 		self.internal_nodes = []
 		self.ranking = [] # top self.n ranking list
 		self.ranking_dict = {} # key = gene, value = rank in list (1-100)
+		self.files_dir = osp.join(self.script_dir, 'files', self.g.name)
+		self.results_dir = osp.join(self.script_dir, 'results', self.g.name)
 		
 	# read in ranking from file and take top n
 	def get_ranking(self):
-		ranking_file = 'files/' + self.g.name + '/nodes_ranking_score_differences_' + str(self.g.l) + '_' + str(self.g.N) + '_' + str(self.g.t) + '.txt'
+		ranking_file = osp.join(self.files_dir, '_'.join(['nodes_ranking_score_differences', str(self.g.l), str(self.g.N), str(self.g.t) + '.txt']))
+		# ranking_file = 'files/' + self.g.name + '/nodes_ranking_score_differences_' + str(self.g.l) + '_' + str(self.g.N) + '_' + str(self.g.t) + '.txt'
 		i = 0
 		num_added = 0
 		rank = 1
 		with open(ranking_file, 'r') as fname:
 			for line in fname:
 				line = literal_eval(line) # read in as a tuple
-				# print(line, type(line))
 				if i < self.n:
 					if line[1] > 0.0:
 						print('Not enough nodes with negative score changes. So only', num_added, 'top significant genes were kept.')
 						break
-						# print(line[0], 'has a score larger than 0.0!') # take only nodes with negative score changes
-						# update self.ranking and self.nodes
+					# update self.ranking and self.nodes
 					self.nodes.append(line[0])
 					self.node_score[line[0]] = str(line[1])
 					self.ranking.append(line)
@@ -1002,20 +1017,25 @@ class SignificantGenes:
 					break
 				i += 1
 	
-	# get files for GO term enrichment
+	# get files for GO term enrichment/pathway analyses
 	# returns list of siginificant nodes, targets, recs, and internal nodes
 	def get_go(self):
 		# create directories and filenames
-		dirname = 'results/' + self.g.name 
-		if not osp.exists(dirname):
-			os.makedirs(dirname)
-		output_genes_file = dirname + '/genes_go.txt'
-		output_receptors_file = dirname + '/receptors_go.txt'
-		output_targets_file = dirname + '/targets_go.txt'
-		output_internal_file = dirname + '/internal_nodes_go.txt'
-		output_ranking_file = dirname + '/nodes_ranking.tsv'
+		output_genes_file = osp.join(self.results_dir, 'genes_go.txt') 
+		output_receptors_file = osp.join(self.results_dir, 'receptors_go.txt')
+		output_targets_file = osp.join(self.results_dir, 'targets_go.txt')
+		output_internal_file = osp.join(self.results_dir, 'internal_nodes_go.txt')
+		output_ranking_file = osp.join(self.results_dir, 'nodes_ranking.tsv')
+
+		# output_genes_file = dirname + '/genes_go.txt'
+		# output_receptors_file = dirname + '/receptors_go.txt'
+		# output_targets_file = dirname + '/targets_go.txt'
+		# output_internal_file = dirname + '/internal_nodes_go.txt'
+		# output_ranking_file = dirname + '/nodes_ranking.tsv'
+
 		# list of targets that are also source nodes
 		source_target_overlap = []
+
 		# write genes, receptors, TFs, and internal nodes to corresponding files
 		with open(output_genes_file, 'w') as gfname, open(output_receptors_file, 'w') as rfname, open(output_targets_file, 'w') as tname, open(output_internal_file, 'w') as inname, open(output_ranking_file, 'w') as rname:
 			rname.write('\t'.join(['Gene/Protein', 'Score_Change', 'Type']) + '\n')
@@ -1040,6 +1060,10 @@ class SignificantGenes:
 		print('Top significant genes, receptors, targets, and internal nodes have been saved for GO molecular function & Reactome Pathways analysis.')
 		print(len(source_target_overlap), 'nodes that are both receptors (sources) and DE genes/TFs (targets) are designated as source nodes:', ', '.join(source_target_overlap))
 
+	# add node size to .noa file for viewing on Cytoscape
+	# nodes with higher rankings have larger node sizes
+	# size 5 is the largest size
+	# nodes ranked 1-20 are of size 5, 21-40 (size 4), 41-60 (size 3), 61-80 (size 2), 81-100 (size 1)
 	def get_node_size(self, node):
 		node_ranking_categories = [21, 41, 61, 81, 101]
 		size = 5
@@ -1048,36 +1072,31 @@ class SignificantGenes:
 				return size
 			size -= 1
 
-	# get files for viewing optimal graph details on Cytoscape			 
+	# get files for viewing (near) optimal graph details on Cytoscape			 
 	def get_noa_sif(self):
 		dirname = 'results/' + self.g.name
 		noa_file = dirname + '/optimal_network.noa'
 		sif_file = dirname + '/optimal_network.sif'
-		# node_no_connections  = []
+
 		# get list of edges
 		with open(sif_file, 'w') as sif_fname:
 			for node in self.nodes:
 				curr_list = [n for n in self.g.G.neighbors(node) if n in self.nodes]
-				# if curr_list != []:
 				curr_list = [node, 'ppi'] + curr_list
 				sif_fname.write('\t'.join(curr_list) + '\n')
-				# else:
-				# 	node_no_connections.append(node)
-				# 	print(node, 'not included in .sif and .noa because it has no connections.')
+				
 		# get list of attributes
 		with open(noa_file, 'w') as noa_fname:
 			noa_fname.write('\t'.join(['Name', 'Type', 'Node_Size']) + '\n')
 			for rec in self.recs:
-				# if rec not in node_no_connections:
 				size = str(self.get_node_size(rec))
 				noa_fname.write('\t'.join([rec, 'source', size]) + '\n')
 			for target in self.targets:
-				# if target not in node_no_connections:
 				size = str(self.get_node_size(target))
 				noa_fname.write('\t'.join([target, 'target', size]) + '\n')
+			# get internal nodes
 			internal_nodes = list((set(self.g.nodes) - set(self.g.recs)) - set(self.g.targets))
 			for node in self.internal_nodes:
-				# if node not in node_no_connections:
 				size = str(self.get_node_size(node))
 				noa_fname.write('\t'.join([node, 'internal', size]) + '\n')
 		print('.noa and .sif files have been saved for viewing optimal graph details on Cytoscape.')
