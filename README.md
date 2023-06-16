@@ -38,13 +38,26 @@ $ python3 setup.py install
 
 ## Usage
 
-1. Run DESeq2
+1. Obtain the following data files:
+  * RNA-seq gene expression data for WT and disease samples
+  * Receptors specific to your disease condition
+
+The data should be formatted as shown in the Example section. 
+
+2. Run DESeq2
 
 ```bash
-$ python3 run_deseq2.py
+$ python3 run_deseq2.py -c COUNTDATA -m METADATA (NOT DONE YET)
 ```
 
-2. Run DENetwork
+Aftering running DESeq2, you should get the following files (to use as input for the next step):
+  1. 3 files containing differentially-expressed (DE) genes
+    * DE_pos_*.tsv containing all upregulated DE genes
+    * DE_neg_*.tsv containing all downregulated DE genes
+    * DE_all_*.tsv containing all DE genes
+  2. a file containing all genes and their log2 fold changes (gene_log2fc.tsv)
+
+3. Run DENetwork
 
 ```bash
 $ python3 run_deseq2.py -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
