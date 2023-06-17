@@ -44,7 +44,7 @@ $ python3 setup.py install
 
 The data should be formatted as shown in the Example section. 
 
-2. Run DESeq2
+2. Run DESeq2 (FIX TABBING)
 
 ```bash
 $ python3 run_deseq2.py -c COUNTDATA -m METADATA (NOT DONE YET)

@@ -139,20 +139,20 @@ def main():
 	# name, DEfile, genefile, recepfile
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n', '--name', required=True, help='name of the DENetwork model')  
-	parser.add_argument('-d', '--defile', required=True, help='file of differentially-expressed genes')
-	parser.add_argument('-g', '--genefile', required=True, help='file containing all genes, their (output result matrix from DESeq2)')
-	parser.add_argument('-r', '--recepfile', required=True, help='file of disease-specific receptors')
+	parser.add_argument('-d', '--de_file', required=True, help='file of differentially-expressed genes')
+	parser.add_argument('-g', '--gene_file', required=True, help='file containing all genes, their (output result matrix from DESeq2)')
+	parser.add_argument('-r', '--recep_file', required=True, help='file of disease-specific receptors')
 	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes (de) OR transcription factors (tf)', choices=['de', 'tf'])
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
-	tffile = '' # DE genes as targets
+	tf_file = '' # DE genes as targets
 	if args.targets == 'tf': # TFs as targets
 		tffile = osp.join(data_dir, 'TFs.txt')
-	ppifile = osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt')
+	ppi_file = osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt')
 
 	# script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile
-	r = RunModel(script_dir, args.name, args.defile, args.genefile, tffile, args.recepfile, ppifile)
+	r = RunModel(script_dir, args.name, args.de_file, args.gene_file, tf_file, args.recep_file, ppi_file)
 	r.run_model()
 
 
