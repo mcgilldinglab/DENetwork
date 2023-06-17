@@ -61,7 +61,7 @@ class RunDESeq2:
 			for gene in gene_log2fc:
 				gene_w.write(gene + '\t' + str(gene_log2fc[gene]) + '\n')
 
-	def get_all_de_genes(self, args.base_mean_threshold, args.p_value_threshold_type, args.p_value_threshold, args.log2_fold_change_threshold):
+	def get_all_de_genes(self, base_mean_threshold, p_value_threshold_type, p_value_threshold, log2_fold_change_threshold):
 		print('Finding all DE genes for:', name)
 		df = pd.read_csv(raw_counts, index_col=None)
 
