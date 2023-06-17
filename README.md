@@ -36,7 +36,7 @@ $ cd DENetwork
 $ python3 setup.py install
 ```
 
-## Usage
+## Usage (FIX INDENTATION...IS REALLY MESSY RN)
 
 1. Obtain the following data files:
   * RNA-seq gene expression data for WT and disease samples
@@ -44,11 +44,7 @@ $ python3 setup.py install
 
 The data should be formatted as shown in the Example section. 
 
-2. Run DESeq2 (FIX TABBING)
-
-```bash
-$ python3 run_deseq2.py -c COUNTDATA -m METADATA (NOT DONE YET)
-```
+2. Run DESeq2
 
 ```bash
 usage: run_deseq2.py [-h] -n NAME -r RAW_COUNTS -w WT_CONDITION -d
@@ -106,10 +102,6 @@ Aftering running DESeq2, you should get the following files (to use as input for
   2. a file containing all genes and their log2 fold changes (gene_log2fc.tsv)
 
 3. Run DENetwork
-
-```bash
-$ python3 run_deseq2.py -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
-```
 
 ```bash
 usage: run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r RECEP_FILE -t
