@@ -2,13 +2,13 @@ import pdb,sys,os
 from multiprocessing import Pool
 from File import *
 import numpy as np
-from BioUtils import BioList
 import pandas as pd
 import csv
 import math
 import pandas as pd
 import statistics as stats
 import os.path as osp
+import argparse
 
 class RunDESeq2:
 	def __init__(self, name, raw_counts, wt_condition, disease_condition, output_dir):

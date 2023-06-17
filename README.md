@@ -50,6 +50,54 @@ The data should be formatted as shown in the Example section.
 $ python3 run_deseq2.py -c COUNTDATA -m METADATA (NOT DONE YET)
 ```
 
+```bash
+usage: run_deseq2.py [-h] -n NAME -r RAW_COUNTS -w WT_CONDITION -d
+                     DISEASE_CONDITION -o OUTPUT_DIR [-b BASE_MEAN_THRESHOLD]
+                     [-t {padj,pvalue}] [-p P_VALUE_THRESHOLD]
+                     [-l LOG2_FOLD_CHANGE_THRESHOLD]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+  -n NAME, --name NAME, required
+                        name of disease condition, used to name the output
+                        files
+
+  -r RAW_COUNTS, --raw_counts RAW_COUNTS, required
+                        comma- (.csv) or tab-delimited (.tsv) file of raw RNA-
+                        seq gene expression data counts that contain samples
+                        of the wildtype and disease conditions (if includes
+                        other conditions, they will be filtered out)
+
+  -w WT_CONDITION, --wt_condition WT_CONDITION, required
+                        wildtype (healthy) condition
+
+  -d DISEASE_CONDITION, --disease_condition DISEASE_CONDITION, required
+                        disease condition
+
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR, required
+                        output directory where output files are stored
+
+  -b BASE_MEAN_THRESHOLD, --base_mean_threshold BASE_MEAN_THRESHOLD, optional
+                        Integer, Optional, is 50 by default. Filters the
+                        DESeq2 result matrix to remove genes with low
+                        expression counts.
+
+  -t {padj,pvalue}, --p_value_threshold_type {padj,pvalue}, optional
+                        padj/pvalue, Optional, is padj by default. Choose
+                        whether to use the unadjusted (pvalue) or adjusted
+                        (padj) p-values to filter DESeq2 result matrix.
+
+  -p P_VALUE_THRESHOLD, --p_value_threshold P_VALUE_THRESHOLD, optional
+                        Float, Optional, is 0.05 by default. Filters the
+                        DESeq2 result matrix to remove insignificant genes.
+
+  -l LOG2_FOLD_CHANGE_THRESHOLD, --log2_fold_change_threshold LOG2_FOLD_CHANGE_THRESHOLD, optional
+                        Positive Float, Optional, is 0.6 by default for
+                        upregulated DE genes and -0.6 for downregulated DE
+                        genes. Filters DE genes.
+```
+
 Aftering running DESeq2, you should get the following files (to use as input for the next step):
   1. 3 files containing differentially-expressed (DE) genes
     * DE_pos_*.tsv containing all upregulated DE genes
@@ -64,19 +112,26 @@ $ python3 run_deseq2.py -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
 ```
 
 ```bash
-usage: run_denetwork.py [-h] -n NAME -d DEFILE -g GENEFILE -r RECEPFILE -t {de,tf}
+usage: run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r RECEP_FILE -t
+                        {de,tf}
 
 optional arguments:
   -h, --help            show this help message and exit
-  -n NAME, --name NAME  name of the DENetwork model
-  -d DEFILE, --defile DEFILE
+
+  -n NAME, --name NAME, required
+                        name of the DENetwork model
+
+  -d DE_FILE, --de_file DE_FILE, required
                         file of differentially-expressed genes
-  -g GENEFILE, --genefile GENEFILE
+
+  -g GENE_FILE, --gene_file GENE_FILE, required
                         file containing all genes, their (output result matrix
                         from DESeq2)
-  -r RECEPFILE, --recepfile RECEPFILE
+
+  -r RECEP_FILE, --recep_file RECEP_FILE, required
                         file of disease-specific receptors
-  -t {de,tf}, --targets {de,tf}
+
+  -t {de,tf}, --targets {de,tf}, required
                         choose whether the targets are differentially-
                         expressed genes (de) OR transcription factors (tf)
 ```
