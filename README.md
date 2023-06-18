@@ -2,10 +2,8 @@
 Unveiling Regulatory and Signaling Networks Behind Differentially Expressed Genes
 
   * [About](#about)
-  * [Required Packages](#required-packages)
   * [Installation](#installation)
   * [Usage](#usage)
-  * [Results](#results)
   * [Example](#example)
   * [License](#license)
   * [Credits](#credits)
@@ -21,11 +19,10 @@ The identification of differentially expressed genes from RNA-seq data is instru
   <img src="https://github.com/mcgilldinglab/DENetwork/blob/main/images/github_denetwork.svg" />
 </p> 
 
-## Required Packages
-
-Python 3 is required.
 
 ## Installation
+
+Python 3 is required.
 
 1. Clone or download this repository.
 
@@ -36,7 +33,7 @@ $ cd DENetwork
 $ python3 setup.py install
 ```
 
-## Usage (FIX INDENTATION...IS REALLY MESSY RN)
+## Usage
 
 **1. Obtain the following data files:**
 
@@ -83,7 +80,7 @@ optional arguments:
 
   -t {padj,pvalue}, --p_value_threshold_type {padj,pvalue}, optional
                         padj/pvalue, Optional, is padj by default. Choose
-                        whether to use the unadjusted (pvalue) or adjusted
+                        whether to use the unadjusted (pvalue) or FDR adjusted
                         (padj) p-values to filter DESeq2 result matrix.
 
   -p P_VALUE_THRESHOLD, --p_value_threshold P_VALUE_THRESHOLD, optional
@@ -132,7 +129,7 @@ The example folder contains an example of RNA-seq gene expression data (GSE19252
 
 Your RNA-seq data should have the following columns:
 * column of genes, with 'Gene' as the column name
-* a column of gene counts for each sample condition, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
+* a column of gene counts for each sample, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
 ```bash
 $python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output -t pvalue
@@ -152,13 +149,11 @@ $python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza
 
 You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
 
-The output files of DENetwork are in the following folders:
-* figures/influenza:
+The output files of DENetwork are in the 'figures', 'files', and 'results' folders. Each DENetwork model has its own subdirectory within each of these 3 folders. In this example, the subdirectory is named 'influenza' (using the '-n influenza' option when running DENetwork). 
+
+* figures/influenza: 
 * files/influenza: contains 
 * results/influenza:
-
-
-## File Directory (?? include info on the directories?)
 
 ## License
 DENetwork is licensed under the terms of the MIT license.

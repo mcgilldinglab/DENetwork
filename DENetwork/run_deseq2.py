@@ -154,7 +154,7 @@ def main():
 
 	# optional arguments
 	parser.add_argument('-b','--base_mean_threshold',required=False, default=50, help='Integer, Optional, is 50 by default. Filters the DESeq2 result matrix to remove genes with low expression counts.')
-	parser.add_argument('-t','--p_value_threshold_type',required=False, default='padj', help='padj/pvalue, Optional, is padj by default. Choose whether to use the unadjusted (pvalue) or adjusted (padj) p-values to filter DESeq2 result matrix.', choices=['padj', 'pvalue'])
+	parser.add_argument('-t','--p_value_threshold_type',required=False, default='padj', help='padj/pvalue, Optional, is padj by default. Choose whether to use the unadjusted (pvalue) or FDR adjusted (padj) p-values to filter DESeq2 result matrix.', choices=['padj', 'pvalue'])
 	parser.add_argument('-p','--p_value_threshold',required=False, default=0.05, help='Float, Optional, is 0.05 by default. Filters the DESeq2 result matrix to remove insignificant genes.')
 	parser.add_argument('-l','--log2_fold_change_threshold',required=False, default=0.6, help='Positive Float, Optional, is 0.6 by default for upregulated DE genes and -0.6 for downregulated DE genes. Filters DE genes.')
 
