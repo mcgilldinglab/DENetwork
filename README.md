@@ -38,13 +38,13 @@ $ python3 setup.py install
 
 ## Usage (FIX INDENTATION...IS REALLY MESSY RN)
 
-1. Obtain the following data files:
+**1. Obtain the following data files:**
     * RNA-seq gene expression data for WT and disease samples (required to run DESeq2)
     * Receptors specific to your disease condition (required to run DENetwork)
 
     The data should be formatted as shown in the Example section. 
 
-2. Run DESeq2
+**2. Run DESeq2**
 
 ```bash
 usage: run_deseq2.py [-h] -n NAME -r RAW_COUNTS -w WT_CONDITION -d
@@ -95,14 +95,7 @@ optional arguments:
                         genes. Filters DE genes.
 ```
 
-Aftering running DESeq2, you should get the following files (to use as input for the next step):
-  1. 3 files containing differentially-expressed (DE) genes
-    * DE_pos_*.tsv containing all upregulated DE genes
-    * DE_neg_*.tsv containing all downregulated DE genes
-    * DE_all_*.tsv containing all DE genes
-  2. a file containing all genes and their log2 fold changes (gene_log2fc.tsv)
-
-3. Run DENetwork
+**3. Run DENetwork**
 
 ```bash
 usage: run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r RECEP_FILE -t
@@ -145,7 +138,10 @@ $python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx
 ```
 
 After running DESeq2, you will end up with the following files (in the example_deseq2_output folder) that you need to run DENetwork:
-* 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. DE_all_influenza.tsv contains all DE genes, while DE_pos_influenza.tsv contains all upregulated DE genes, and DE_neg_influenza.tsv contains all downregulated DE genes. You can choose either of the 3 files for input into DENetwork.
+* 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. 
+    1. DE_all_influenza.tsv contains all DE genes
+    2. DE_pos_influenza.tsv contains all upregulated DE genes
+    3. DE_neg_influenza.tsv contains all downregulated DE genes. You can choose either of the 3 files for input into DENetwork.
 
 * gene_log2fc_influenza.tsv which contains a gene column and a log2 fold change (in absolute value) column.
 
