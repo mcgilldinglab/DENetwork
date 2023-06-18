@@ -65,7 +65,7 @@ optional arguments:
                         contain samples of the wildtype and disease conditions
                         (if includes samples for other conditions, they will
                         be filtered out)
-                        
+
   -w WT_CONDITION, --wt_condition WT_CONDITION, required
                         wildtype (healthy) condition
 
@@ -131,19 +131,31 @@ optional arguments:
 
 There are many model parameters in DENetwork, so they are not listed as optional arguments when running run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
 
-## Results
 
 ## Example
 
-The example folder contains an example of RNA-seq gene expression data (influenza_count_data.tsv).
+The example folder contains an example of RNA-seq gene expression data (GSE192528_RawCountsAnnotated.xlsx) and disease-specific receptors (receptors_influenza.txt) for an IAV (influenza) dataset.
+
 Your RNA-seq data should have the following columns:
-* Sub column of genes, with 'Gene' as the column name
-* Sub a column of gene counts for each sample condition, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
+* column of genes, with 'Gene' as the column name
+* a column of gene counts for each sample condition, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
 ```bash
 $python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output 
 ```
 
+After running DESeq2, you will end up with the following files (in the example_deseq2_output folder) that you need to run DENetwork:
+1. 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. DE_all_influenza.tsv contains all DE genes, while DE_pos_influenza.tsv contains all upregulated DE genes, and DE_neg_influenza.tsv contains all downregulated DE genes. You can choose either of the 3 files for input into DENetwork.
+
+2. gene_log2fc_influenza.tsv which contains a gene column and a log2 fold change (in absolute value) column.
+
+```bash
+$python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de
+```
+
+You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
+
+## File Directory (?? include info on the directories?)
 
 ## License
 DENetwork is licensed under the terms of the MIT license.
