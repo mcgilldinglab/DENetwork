@@ -39,10 +39,10 @@ $ python3 setup.py install
 ## Usage (FIX INDENTATION...IS REALLY MESSY RN)
 
 1. Obtain the following data files:
-  * RNA-seq gene expression data for WT and disease samples
-  * Receptors specific to your disease condition
+    * RNA-seq gene expression data for WT and disease samples (required to run DESeq2)
+    * Receptors specific to your disease condition (required to run DENetwork)
 
-The data should be formatted as shown in the Example section. 
+    The data should be formatted as shown in the Example section. 
 
 2. Run DESeq2
 
@@ -145,15 +145,21 @@ $python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx
 ```
 
 After running DESeq2, you will end up with the following files (in the example_deseq2_output folder) that you need to run DENetwork:
-1. 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. DE_all_influenza.tsv contains all DE genes, while DE_pos_influenza.tsv contains all upregulated DE genes, and DE_neg_influenza.tsv contains all downregulated DE genes. You can choose either of the 3 files for input into DENetwork.
+* 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. DE_all_influenza.tsv contains all DE genes, while DE_pos_influenza.tsv contains all upregulated DE genes, and DE_neg_influenza.tsv contains all downregulated DE genes. You can choose either of the 3 files for input into DENetwork.
 
-2. gene_log2fc_influenza.tsv which contains a gene column and a log2 fold change (in absolute value) column.
+* gene_log2fc_influenza.tsv which contains a gene column and a log2 fold change (in absolute value) column.
 
 ```bash
 $python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de
 ```
 
 You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
+
+The output files of DENetwork are in the following folders:
+* figures/influenza:
+* files/influenza: contains 
+* results/influenza:
+
 
 ## File Directory (?? include info on the directories?)
 
