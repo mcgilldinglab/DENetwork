@@ -60,11 +60,12 @@ optional arguments:
                         files
 
   -r RAW_COUNTS, --raw_counts RAW_COUNTS, required
-                        comma- (.csv) or tab-delimited (.tsv) file of raw RNA-
-                        seq gene expression data counts that contain samples
-                        of the wildtype and disease conditions (if includes
-                        other conditions, they will be filtered out)
-
+                        comma- (.csv), tab-delimited (.tsv) or excel (.xlsx)
+                        file of raw RNA-seq gene expression data counts that
+                        contain samples of the wildtype and disease conditions
+                        (if includes samples for other conditions, they will
+                        be filtered out)
+                        
   -w WT_CONDITION, --wt_condition WT_CONDITION, required
                         wildtype (healthy) condition
 
@@ -133,6 +134,16 @@ There are many model parameters in DENetwork, so they are not listed as optional
 ## Results
 
 ## Example
+
+The example folder contains an example of RNA-seq gene expression data (influenza_count_data.tsv).
+Your RNA-seq data should have the following columns:
+* Sub column of genes, with 'Gene' as the column name
+* Sub a column of gene counts for each sample condition, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
+
+```bash
+$python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output 
+```
+
 
 ## License
 DENetwork is licensed under the terms of the MIT license.

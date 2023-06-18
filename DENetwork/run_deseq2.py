@@ -9,6 +9,7 @@ import pandas as pd
 import statistics as stats
 import os.path as osp
 import argparse
+from simple_tools import check_create_dir
 
 class RunDESeq2:
 	def __init__(self, name, raw_counts, wt_condition, disease_condition, output_dir):
@@ -17,6 +18,7 @@ class RunDESeq2:
 		self.wt_condition = wt_condition
 		self.disease_condition = disease_condition
 		self.output_dir = output_dir
+		check_create_dir(self.output_dir)
 
 	def runDESeq2(self, datMatrixFile,metaMatrixFile,A,B):
 		from diffexpr.py_deseq import py_DESeq2
@@ -62,8 +64,14 @@ class RunDESeq2:
 				gene_w.write(gene + '\t' + str(gene_log2fc[gene]) + '\n')
 
 	def get_all_de_genes(self, base_mean_threshold, p_value_threshold_type, p_value_threshold, log2_fold_change_threshold):
-		print('Finding all DE genes for:', name)
-		df = pd.read_csv(raw_counts, index_col=None)
+		print('Finding all DE genes for:', self.name)
+		
+		df = []
+		if '.xlsx' in self.raw_counts:
+			df = pd.read_excel(self.raw_counts, index_col=None)
+		else:
+			df = pd.read_csv(self.raw_counts, index_col=None)
+
 
 		sample_names = list(df)[1:] # sample names
 		column_names = []
@@ -139,7 +147,7 @@ def main():
 	# reguired arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n', '--name', required=True, help='name of disease condition, used to name the output files')  
-	parser.add_argument('-r', '--raw_counts', required=True, help='comma- (.csv) or tab-delimited (.tsv) file of raw RNA-seq gene expression data counts that contain samples of the wildtype and disease conditions (if includes other conditions, they will be filtered out)')
+	parser.add_argument('-r', '--raw_counts', required=True, help='comma- (.csv), tab-delimited (.tsv) or excel (.xlsx) file of raw RNA-seq gene expression data counts that contain samples of the wildtype and disease conditions (if includes samples for other conditions, they will be filtered out)')
 	parser.add_argument('-w', '--wt_condition', required=True, help='wildtype (healthy) condition')
 	parser.add_argument('-d', '--disease_condition', required=True, help='disease condition')
 	parser.add_argument('-o', '--output_dir', required=True, help='output directory where output files are stored')
