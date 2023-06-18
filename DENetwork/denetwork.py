@@ -698,10 +698,10 @@ class Graph:
 		plt.axvline(x=best_elbow, c = 'r')
 		# save figure
 		if j == -1:
-			plt.savefig(self.sq_fig_dir, 'S_Q.svg')
+			plt.savefig(osp.join(self.sq_fig_dir, 'S_Q.svg'))
 			# plt.savefig('figures/' + self.name + '/S_Q/S_Q.png')
 		else: 
-			plt.savefig(self.sq_fig_dir, 'S_Q' + str(j+1) + '.svg')
+			plt.savefig(osp.join(self.sq_fig_dir, 'S_Q' + str(j+1) + '.svg'))
 			# plt.savefig('figures/' + self.name + '/S_Q/S_Q' + str(j+1) + '.png')
 		plt.close()
 

@@ -43,7 +43,7 @@ $ python3 setup.py install
   * RNA-seq gene expression data for WT and disease samples (required to run DESeq2)
   * Receptors specific to your disease condition (required to run DENetwork)
 
-    The data should be formatted as shown in the Example section. 
+  The data should be formatted as shown in the Example section. 
 
 **2. Run DESeq2**
 
@@ -135,7 +135,7 @@ Your RNA-seq data should have the following columns:
 * a column of gene counts for each sample condition, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
 ```bash
-$python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output 
+$python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output -t pvalue
 ```
 
 After running DESeq2, you will end up with the following files (in the example_deseq2_output folder) that you need to run DENetwork:
