@@ -29,7 +29,7 @@ class Data:
 		self.recepfile = recepfile
 		self.PPIfile = PPIfile
 		self.genes_log2fc = {}
-		self.ppis = {} # dict (key = tuple of interacting pair, value = log2 ppi score)
+		self.ppis = {} # key = tuple of interacting pair, value = log2 ppi score
 		self.ppis_dict = {} # dict of dict of interacting pairs, value = log2 ppi score
 
 	def get_TFs(self, DEgenes, num_genes, adj, adj_type, num_tfs):
@@ -521,7 +521,7 @@ class Graph:
 		# plot path score distribution (should be roughly Gaussian) & save it to file
 		plt.figure()
 		plt.hist(scores_list, bins=20)
-		path_scores_figname = osp.join(self.path_scores_fig_dir, 'path_scores_distribution' + str(j) +'.svg')
+		path_scores_figname = osp.join(self.path_scores_fig_dir, 'path_scores_distribution' + str(j+1) +'.svg')
 		plt.savefig(path_scores_figname)
 		# plt.savefig('figures/' +  self.name + '/path_scores_distribution/' + 'path_scores_distribution' + str(j) +'.png')
 		plt.close()
