@@ -21,7 +21,7 @@ from ast import literal_eval
 from denetwork import Data, Graph, SignificantGenes
 import random
 import argparse
-from simple_tools import check_create_dir
+from simple_tools import check_create_dir, pickle_load
 
 class RunModel:
 	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile):
@@ -115,7 +115,8 @@ class RunModel:
 			g = object of (near) global optimum solution
 			n = number of significant genes to keep
 		'''
-		sg = SignificantGenes(g=g, n=100) 
+
+		sg = SignificantGenes(self.script_dir, g=g, n=100) 
 		sg.get_ranking()
 		sg.get_go()
 		sg.get_noa_sif()

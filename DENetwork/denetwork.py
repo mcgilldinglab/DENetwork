@@ -978,6 +978,7 @@ class Graph:
 
 class SignificantGenes:
 	def __init__(self, script_dir, g, n):
+		self.script_dir = script_dir
 		self.g = g # (near) optimal graph
 		self.n = n # number of significant nodes to keep
 		self.nodes = []
