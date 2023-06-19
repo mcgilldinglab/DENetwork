@@ -33,15 +33,16 @@ $ cd DENetwork
 $ python3 setup.py install
 ```
 
-3. You may need to upgrade your R version in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R as follows:
+3. You may need to upgrade your R version and rpy2 in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R and rpy2 as follows:
 
 ```bash
 $ conda config --add channels conda-forge
 $ conda config --set channel_priority strict
 $ conda install -c conda-forge r-base
+$ conda install -c conda-forge rpy2
 ```
 
-4. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
+5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
 
 ```R
 if (!require("BiocManager", quietly = TRUE))
