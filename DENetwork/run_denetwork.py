@@ -49,9 +49,9 @@ class RunModel:
 		
 		# --------------------STEP 1--------------------
 		''' init_graph
-			adj = True/False, adjust p-values using FDR
-			adj_type = 'FDR'/'BON' (FDR or Bonferroni; multiple testing correction for p-values)
-			num_tfs = 'all'/int # of enriched TFs to select 
+			adj = True/False, adjust p-values using FDR (only for when using TFs as targets)
+			adj_type = 'FDR'/'BON' FDR or Bonferroni; multiple testing correction for p-values (only for when using TFs as targets)
+			num_tfs = 'all'/int # of enriched TFs to select (only for when using TFs as targets)
 			returns the targets of the network
 
 			default parameters: adj=True, adj_type='FDR', num_tfs='all'
@@ -119,7 +119,7 @@ class RunModel:
 
 		# --------------------STEP 7--------------------
 		''' SignificantGenes
-			g = object of (near) global optimum solution
+			g = object of (near) global optimual solution
 			n = number of significant genes to keep
 		'''
 		sg = SignificantGenes(self.script_dir, g=g, n=self.num_significant_genes) 

@@ -4,15 +4,12 @@ This script contains the RunDESeq2 class for running DESeq2.
 Author: Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 '''
-import pdb,sys,os
-from multiprocessing import Pool
 from File import *
 import numpy as np
 import pandas as pd
 import csv
 import math
 import pandas as pd
-import statistics as stats
 import os.path as osp
 import argparse
 from simple_tools import check_create_dir
