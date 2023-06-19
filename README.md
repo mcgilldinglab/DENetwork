@@ -24,16 +24,16 @@ The identification of differentially expressed genes from RNA-seq data is instru
 
 Python 3 is required.
 
-1. Clone or download this repository.
+**1. Clone or download this repository.**
 
-2. Navigate to the downloaded DENetwork folder and install required Python packages.
+**2. Navigate to the downloaded DENetwork folder and install required Python packages.**
 
 ```bash
 $ cd DENetwork
 $ python3 setup.py install
 ```
 
-3. You may need to upgrade your R version and rpy2 in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R and rpy2 as follows:
+**3. You may need to upgrade your R version and rpy2 in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R and rpy2 as follows:**
 
 ```bash
 $ conda config --add channels conda-forge
@@ -42,7 +42,7 @@ $ conda install -c conda-forge r-base
 $ conda install -c conda-forge rpy2
 ```
 
-5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
+**5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.**
 
 ```R
 if (!require("BiocManager", quietly = TRUE))
