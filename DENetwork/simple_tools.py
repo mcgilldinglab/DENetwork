@@ -1,8 +1,12 @@
-# simple functions
+'''
+
+This script contains simple functions for use in other scripts.
+Author: Ting-Yi Su ting-yi.su@mail.mcgill.ca
+
+'''
 import pickle
 import os.path as osp
 import os
-from Bio.PDB import PDBList
 
 def pickle_load(pickle_file):
 	with open(pickle_file, 'rb') as f:
@@ -26,12 +30,6 @@ def check_create_dir(dirname):
 def check_remove(dirname):
 	if osp.exists(dirname):
 		os.remove(dirname)
-
-# def write_list_of_lists_to_tsv(contents, file):
-# 	with open(file, 'w') as f:
-# 		for line in contents:
-# 			line = [str(item) for item in line]
-# 			f.write('\t'.join(line) + '\n')
 
 # reads in items from newline delimited file
 # and returns a list of the items

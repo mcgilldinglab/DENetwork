@@ -1,3 +1,9 @@
+'''
+
+This script contains the Data, Graph, and SignficantGene classes in DENetwork.
+Author: Ting-Yi Su ting-yi.su@mail.mcgill.ca
+
+'''
 import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -141,8 +147,6 @@ class Graph:
 		name = name of graph
 		DEfile = file of DE genes w/ padj < 0.01
 		genefile = file of total genes
-		wt_indicies = list of column indices of WT sample counts
-		ko_indicies = list of column indices of KO sample counts
 		TFfile = file of TFs
 		recepfile = file of receptors
 		PPIfile = file of interacting proteins and their corresponding PPI scores
@@ -181,14 +185,6 @@ class Graph:
 		check_create_dir(self.path_scores_fig_dir)
 		self.sq_fig_dir = osp.join(self.figures_dir, 'S_Q')
 		check_create_dir(self.sq_fig_dir)
-		
-		# if not osp.exists('files/' + self.name):
-		# 	os.makedirs('files/' + self.name)
-		# if not osp.exists('figures/' + self.name + '/path_scores_distribution'):
-		# 	os.makedirs('figures/' + self.name + '/path_scores_distribution')
-		# if not osp.exists('figures/' + self.name + '/S_Q'):
-		# 	os.makedirs('figures/' + self.name + '/S_Q')
-
 	
 	def update_all(self, prev_g, prev_paths, prev_paths_list):
 		# update node, edge, and path attributes
@@ -230,10 +226,8 @@ class Graph:
 		plt.plot(self.improv_iterations, self.improv_list)
 		plt.xlabel("Iteration number")
 		plt.ylabel("% improvement")
-		fig_name = osp.join(self.figures_dir, 'step5_improvement_', '_'.join([self.l, str(self.N), str(self.t) + '.svg']))
+		fig_name = osp.join(self.figures_dir, '_'.join(['step5_improvement', str(self.l), str(self.N), str(self.t) + '.svg']))
 		plt.savefig(fig_name)
-
-		# plt.savefig('figures/' + self.name + '/step5_improvement_' + self.l + '_' + str(self.N) + '_' + str(self.t) + '.jpg')
 	
 	# -------------------------------------------helper functions-----------------------------------------
 	
@@ -442,19 +436,12 @@ class Graph:
 		'''
 
 		shortest_paths_pickle_file = osp.join(self.files_dir, 'shortest_paths.pickle')
-		# fname = 'files/' + self.name + '/shortest_path.pickle'
 
 		if r: 
 			self.paths = self.get_shortest_paths(k)
 			pickle_dump(self.paths, shortest_paths_pickle_file) # write shortest paths to file
-
-			# with open(fname, 'wb') as f:
-			# 	pickle.dump(self.paths, f)
 		else:
 			self.paths = pickle_load(shortest_paths_pickle_file) # read in shortest paths
-
-			# with open(fname, 'rb') as f:
-			# 	self.paths = pickle.load(f)
 
 		print('-------------------------Filtering paths------------------------')
 
@@ -469,8 +456,6 @@ class Graph:
 		path_scores_figname = osp.join(self.path_scores_fig_dir, 'path_scores_distribution.svg')
 		plt.savefig(path_scores_figname)
 		plt.close()
-
-		# plt.savefig('figures/' + self.name + '/path_scores_distribution/path_scores_distribution.png')
 
 		# calculate p-values
 		mu = stats.mean(scores_list)
@@ -523,7 +508,6 @@ class Graph:
 		plt.hist(scores_list, bins=20)
 		path_scores_figname = osp.join(self.path_scores_fig_dir, 'path_scores_distribution' + str(j+1) +'.svg')
 		plt.savefig(path_scores_figname)
-		# plt.savefig('figures/' +  self.name + '/path_scores_distribution/' + 'path_scores_distribution' + str(j) +'.png')
 		plt.close()
 
 
@@ -643,10 +627,8 @@ class Graph:
 		plt.legend(["Score", "Penalty"])
 		if j == -1:
 			plt.savefig(osp.join(self.sq_fig_dir, 'score_penalty.svg'))
-			# plt.savefig('figures/' + self.name + '/S_Q/score_penalty.png')
 		else: 
 			plt.savefig(osp.join(self.sq_fig_dir, 'score_penalty' + str(j+1) + '.svg'))
-			# plt.savefig('figures/' + self.name + '/S_Q/score_penalty' + str(j+1) + '.png')
 		plt.close()
 
 		# plot S(Q) with line x (which connects the first & last points)
@@ -696,13 +678,12 @@ class Graph:
 
 		print('best elbow:', best_elbow)
 		plt.axvline(x=best_elbow, c = 'r')
+
 		# save figure
 		if j == -1:
 			plt.savefig(osp.join(self.sq_fig_dir, 'S_Q.svg'))
-			# plt.savefig('figures/' + self.name + '/S_Q/S_Q.png')
 		else: 
 			plt.savefig(osp.join(self.sq_fig_dir, 'S_Q' + str(j+1) + '.svg'))
-			# plt.savefig('figures/' + self.name + '/S_Q/S_Q' + str(j+1) + '.png')
 		plt.close()
 
 		# remove the paths with the lowest scores (# of paths removed = best_elbow)
@@ -715,8 +696,6 @@ class Graph:
 			self.local_SQ = S_Q[best_elbow]
 			self.local_lambda_pen = lambda_pen
 			pickle_dump(self, osp.join(self.files_dir, 'local_op_g.pickle'))
-			# with open('files/' + self.name + '/local_op_g.pickle', 'wb') as fname:
-			# 	pickle.dump(self, fname)
 
 		if j != -1: return lambda_pen
 
@@ -855,17 +834,19 @@ class Graph:
 				print('NO IMPROVEMENT; current best S(Q) (calculated using local lambda penalty):', best_SQ, ", num_no_improv:", num_no_improv, ', num_improv: ', num_improv)
 				if improv_list != []:
 					if num_no_improv == t or stats.mean(improv_list) < 5: # have converges if have less than 5% improvement on average or have t continuous no improvements
+						
 						# plot a curve of G vs G1 S(Q) (percentage improvement)
 						self.global_SQ = best_SQ
 						print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv)
+						
 						# save optimal graph object
 						pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
-						# with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
-						# 	pickle.dump(self, f)
+						
 						stop = timeit.default_timer()
 						print('Time needed to find the optimal graph: ', stop - start)
 						self.improv_list = improv_list
 						self.improv_iterations = improv_iterations
+
 						if len(improv_list) > 1:
 							# plot improvement
 							self.plot_improvement()
@@ -887,14 +868,15 @@ class Graph:
 		# plot a curve of G vs G1 S(Q) (percentage improvement)
 		self.global_SQ = best_SQ
 		print(improv_list, "current # no improvement:", num_no_improv, "total # no improvement:", total_num_no_improv)
+		
 		# save optimal graph object
 		pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
-		# with open('files/' + self.name + '/optimal_graph_' + str(l) + '_' + str(N) + '_' + str(t) + '.pickle', 'wb') as f:
-		# 	pickle.dump(self, f)
+		
 		stop = timeit.default_timer()
 		print('Time needed to find the optimal graph: ', stop - start)
 		self.improv_list = improv_list
 		self.improv_iterations = improv_iterations
+		
 		return
 
 	def calculate_path_score2(self, G, paths): # input parameters instead of attributes
@@ -962,18 +944,10 @@ class Graph:
 		# write to files folder
 		score_differences_f = osp.join(self.files_dir, '_'.join(['nodes_ranking_score_differences', str(self.l), str(self.N), str(self.t) + '.txt']))
 		scores_f = osp.join(self.files_dir, '_'.join(['nodes_ranking_scores', str(self.l), str(self.N), str(self.t) + '.txt']))
-
-		# score_differences_f = 'files/' + self.name + '/nodes_ranking_score_differences_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
-		# scores_f = 'files/' + self.name + '/nodes_ranking_scores_' + str(self.l) + '_' + str(self.N) + '_' + str(self.t) + '.txt'
 		
 		write_list_to_file_convert_to_str(SQ_scores, scores_f)
 		write_list_to_file_convert_to_str(SQ_score_differences, score_differences_f)
 
-		# with open(score_differences_f, 'w') as f_diff, open(scores_f, 'w') as f_scores:
-		# 	for tup in SQ_scores:
-		# 		f_scores.write(str(tup) + '\n')
-		# 	for tup in SQ_score_differences:
-		# 		f_diff.write(str(tup) + '\n')
 		return (SQ_score_differences)
 
 class SignificantGenes:
@@ -993,8 +967,9 @@ class SignificantGenes:
 		
 	# read in ranking from file and take top n
 	def get_ranking(self):
+
 		ranking_file = osp.join(self.files_dir, '_'.join(['nodes_ranking_score_differences', str(self.g.l), str(self.g.N), str(self.g.t) + '.txt']))
-		# ranking_file = 'files/' + self.g.name + '/nodes_ranking_score_differences_' + str(self.g.l) + '_' + str(self.g.N) + '_' + str(self.g.t) + '.txt'
+		
 		i = 0
 		num_added = 0
 		rank = 1
@@ -1020,18 +995,13 @@ class SignificantGenes:
 	# get files for GO term enrichment/pathway analyses
 	# returns list of siginificant nodes, targets, recs, and internal nodes
 	def get_go(self):
+
 		# create directories and filenames
 		output_genes_file = osp.join(self.results_dir, 'genes_go.txt') 
 		output_receptors_file = osp.join(self.results_dir, 'receptors_go.txt')
 		output_targets_file = osp.join(self.results_dir, 'targets_go.txt')
 		output_internal_file = osp.join(self.results_dir, 'internal_nodes_go.txt')
 		output_ranking_file = osp.join(self.results_dir, 'nodes_ranking.tsv')
-
-		# output_genes_file = dirname + '/genes_go.txt'
-		# output_receptors_file = dirname + '/receptors_go.txt'
-		# output_targets_file = dirname + '/targets_go.txt'
-		# output_internal_file = dirname + '/internal_nodes_go.txt'
-		# output_ranking_file = dirname + '/nodes_ranking.tsv'
 
 		# list of targets that are also source nodes
 		source_target_overlap = []
@@ -1074,9 +1044,9 @@ class SignificantGenes:
 
 	# get files for viewing (near) optimal graph details on Cytoscape			 
 	def get_noa_sif(self):
-		dirname = 'results/' + self.g.name
-		noa_file = dirname + '/optimal_network.noa'
-		sif_file = dirname + '/optimal_network.sif'
+
+		noa_file = osp.join(self.results_dir, 'optimal_network.noa') 
+		sif_file = osp.join(self.results_dir, 'optimal_network.sif')
 
 		# get list of edges
 		with open(sif_file, 'w') as sif_fname:

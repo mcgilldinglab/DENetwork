@@ -1,3 +1,9 @@
+'''
+
+This script contains the functions to process different types of files
+Author: Jun Ding jun.ding@mcgill.ca
+
+'''
 import abc
 import h5py
 import numpy as np

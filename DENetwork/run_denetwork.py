@@ -1,3 +1,9 @@
+'''
+
+This script contains the RunModel class for running DENetwork.
+Author: Ting-Yi Su ting-yi.su@mail.mcgill.ca
+
+'''
 import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,10 +27,10 @@ from ast import literal_eval
 from denetwork import Data, Graph, SignificantGenes
 import random
 import argparse
-from simple_tools import check_create_dir, pickle_load
+from simple_tools import check_create_dir
 
 class RunModel:
-	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile):
+	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, num_significant_genes):
 		self.script_dir = script_dir
 		self.name = name
 		self.DEfile = DEfile
@@ -32,6 +38,7 @@ class RunModel:
 		self.TFfile = TFfile # TFfile = '' if using DE genes as the targets
 		self.recepfile = recepfile
 		self.PPIfile = PPIfile
+		self.num_significant_genes = num_significant_genes
 
 	def run_model(self):
 
@@ -115,8 +122,7 @@ class RunModel:
 			g = object of (near) global optimum solution
 			n = number of significant genes to keep
 		'''
-
-		sg = SignificantGenes(self.script_dir, g=g, n=100) 
+		sg = SignificantGenes(self.script_dir, g=g, n=self.num_significant_genes) 
 		sg.get_ranking()
 		sg.get_go()
 		sg.get_noa_sif()
@@ -137,13 +143,13 @@ def main():
 	check_create_dir(results_dir)
 
 	# input arguments
-	# name, DEfile, genefile, recepfile
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n', '--name', required=True, help='name of the DENetwork model')  
-	parser.add_argument('-d', '--de_file', required=True, help='file of differentially-expressed genes')
-	parser.add_argument('-g', '--gene_file', required=True, help='file containing all genes, their (output result matrix from DESeq2)')
-	parser.add_argument('-r', '--recep_file', required=True, help='file of disease-specific receptors')
+	parser.add_argument('-d', '--de_file', required=True, help='tab-delimited file (.tsv) of differentially-expressed genes, along with their baseMean, log2FoldChange, lfcSE, stat, pvalue, and padj')
+	parser.add_argument('-g', '--gene_file', required=True, help='tab-delimited file (.tsv) containing all genes and their |log2FoldChange|')
+	parser.add_argument('-r', '--recep_file', required=True, help='text file (.txt) of disease-specific receptors')
 	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes (de) OR transcription factors (tf)', choices=['de', 'tf'])
+	parser.add_argument('-s', '--num_significant_genes', required=True, type=int, help='number of top-ranked genes to select from the (near) optimal network; these selected genes make up the final network (signaling/regulatory pathway) and can be used for GO biological process & reactome pathway analysis')
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
@@ -153,7 +159,7 @@ def main():
 	ppi_file = osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt')
 
 	# script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile
-	r = RunModel(script_dir, args.name, args.de_file, args.gene_file, tf_file, args.recep_file, ppi_file)
+	r = RunModel(script_dir, args.name, args.de_file, args.gene_file, tf_file, args.recep_file, ppi_file, args.num_significant_genes)
 	r.run_model()
 
 
