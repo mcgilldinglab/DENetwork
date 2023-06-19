@@ -1,6 +1,6 @@
 '''
 
-This script contains the functions to process tab-delimited files
+This script contains functions to process tab-delimited files
 Author: Jun Ding jun.ding@mcgill.ca
 
 '''	
