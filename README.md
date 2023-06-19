@@ -26,23 +26,48 @@ Python 3 is required.
 
 1. Clone or download this repository.
 
-2. Navigate to the downloaded DENetwork folder and download required Python packages
+2. Navigate to the downloaded DENetwork folder and install required Python packages.
 
 ```bash
 $ cd DENetwork
 $ python3 setup.py install
 ```
 
+3. You may need to upgrade your R version in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R as follows:
+
+```bash
+$ conda config --add channels conda-forge
+$ conda config --set channel_priority strict
+$ conda install -c conda-forge r-base
+```
+
+4. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
+
+```R
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("DESeq2")
+```
+
+Please refer to https://bioconductor.org/packages/release/bioc/html/DESeq2.html for the R DESeq2 documentation.
+
+
 ## Usage
 
 **1. Obtain the following data files:**
 
-  * RNA-seq gene expression data for WT and disease samples (required to run DESeq2)
+  * RNA-seq gene expression count data for wildtype (healthy) and disease samples (required to run DESeq2)
   * Receptors specific to your disease condition (required to run DENetwork)
 
   The data should be formatted as shown in the [Example](#example) section. 
 
 **2. Run DESeq2**
+
+Navigate to the DENetwork folder containing scripts.
+```bash
+$ cd DENetwork
+```
 
 ```bash
 usage: run_deseq2.py [-h] -n NAME -r RAW_COUNTS -w WT_CONDITION -d
@@ -131,6 +156,7 @@ optional arguments:
                         analysis
 ```
 
+DENetwork should take a couple hours to run.
 There are many model parameters in DENetwork, so they are not listed as optional arguments in run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
 
 
@@ -143,7 +169,7 @@ Your RNA-seq data should have the following columns:
 * a column of gene counts for each sample, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
 ```bash
-$python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output -t pvalue
+$ python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output -t pvalue
 ```
 
 After running DESeq2, you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
@@ -161,7 +187,7 @@ The 'data' folder contains 2 files that are mandatory for running DENetwork:
 * 'TFs.txt' contains a list of all TFs that are used to find significant TFs, if TFs are chosen as the target nodes
 
 ```bash
-$python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de -s 100
+$ python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de -s 100
 ```
 
 You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
@@ -170,8 +196,8 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
 
 * 'results/influenza' contains the output of DENetwork:
-    * 'genes_go.txt' contains all top-ranked genes kept using the '-s' argument
-    * 'receptors_go.txt' contains all receptors amongst the top genes kept (targets that are also receptors, are listed as receptors)
+    * 'genes_go.txt' contains all 100 top-ranked genes kept ('-s 100' option)
+    * 'receptors_go.txt' contains all receptors amongst the top genes kept (targets that are also receptors are listed as receptors)
     * 'targets_go.txt' contains all targets amongst the top genes kept
     * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes kept
     * 'optimal_network.sif' contains the connections between the top-ranked genes
@@ -181,8 +207,8 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
     The .sif and .noa file can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
 
 * 'figures/influenza' contains the following folders:
-    * 'path_scores_distribution' folder containing distribution plots of the path scores 
-    * 'S_Q' folder containing S(Q) and score penalty plots
+    * 'path_scores_distribution' contains distribution plots of the path scores 
+    * 'S_Q' contains S(Q) and score penalty plots
 
     Figure names without a number at the end were plotted when finding a local optimal solution, and those with a number at the end were plotted when finding the (near) optimal solution. 
 
