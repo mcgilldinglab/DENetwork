@@ -136,7 +136,7 @@ There are many model parameters in DENetwork, so they are not listed as optional
 
 ## Example
 
-The example folder contains an example of RNA-seq gene expression data (GSE192528_RawCountsAnnotated.xlsx) and disease-specific receptors (receptors_influenza.txt) for an IAV (influenza) dataset.
+The 'example' folder contains an example of RNA-seq gene expression data (GSE192528_RawCountsAnnotated.xlsx) and disease-specific receptors (receptors_influenza.txt) for an IAV (influenza) dataset.
 
 Your RNA-seq data should have the following columns:
 * column of genes, with 'Gene' as the column name
@@ -148,13 +148,17 @@ $python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx
 
 After running DESeq2, you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
 * 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. 
-    1. DE_all_influenza.tsv contains all DE genes
-    2. DE_pos_influenza.tsv contains all upregulated DE genes
-    3. DE_neg_influenza.tsv contains all downregulated DE genes. 
+    1. 'DE_all_influenza.tsv' contains all DE genes
+    2. 'DE_pos_influenza.tsv' contains all upregulated DE genes
+    3. 'DE_neg_influenza.tsv' contains all downregulated DE genes. 
 
   You can choose either of the 3 files for input into DENetwork. Ideally, you want to obtain a couple hundred (~200-400) DE genes for input into DENetwork. For example, DE_pos_influenza.tsv is chosen and it contains 236 upregulated DE genes. The optional input arguments (-b, -t, -p, -l) can be changed to increase or decrease the number of DE genes outputted. 
 
-* gene_log2fc_influenza.tsv which contains a gene column and a log2 fold change (in absolute value) column.
+* 'gene_log2fc_influenza.tsv' which contains a gene column and a log2 fold change (in absolute value) column.
+
+The 'data' folder contains 2 files that are mandatory for running DENetwork:
+* 'ppi_ptm_pd.hgnc.txt' contains a list of PPI scores (both protein-protein and protein-dna) 
+* 'TFs.txt' contains a list of all TFs that are used to find significant TFs, if TFs are chosen as the target nodes
 
 ```bash
 $python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de -s 100
@@ -185,10 +189,10 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
     If there is more than one improvement during the iterative refinement process, there will be additional an improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
   
 * 'files/influenza' contains the following files:
-    * 'local_op_g.pickle' file containing the local optimal graph object
-    * 'optimal_graph_8_5_5.pickle' file containing the (near) optimal graph object
-    * 'shortest_paths.picke' file containing the shortest paths found
-    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' containing the score differences and scores when each node is removed
+    * 'local_op_g.pickle' pickle file containing the local optimal graph object
+    * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
+    * 'shortest_paths.pickle' pickle file containing the shortest paths found
+    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals
 
 
 ## License
