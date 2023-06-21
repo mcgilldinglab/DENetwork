@@ -568,9 +568,9 @@ class Graph:
 					for path in curr_paths:
 						score = 0.0
 						for i in range(len(path)-1):
-							score -= float(self.edges[path[i], path[i+1]]['ppi']) + float(self.nodes[path[i]]['log2fc']) + float(self.nodes[path[i+1]]['log2fc'])
+							score += float(self.edges[path[i], path[i+1]]['ppi']) + float(self.nodes[path[i]]['log2fc']) + float(self.nodes[path[i+1]]['log2fc'])
 						scores.append(score)
-					top_N = sorted(range(len(scores)), key=lambda x: scores[x])[:N] # want the minimal path scores
+					top_N = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)[:N] # want the maximal path scores
 					top = [curr_paths[i] for i in top_N]
 					top_paths[receptor][target] = top
 					remaining_paths.append(top)
@@ -591,7 +591,7 @@ class Graph:
 		j = current number of times function is called
 		curve = shape of the graph, either 'concave' or 'convex'
 		'''
-
+		print('-------------------------Finding local optimal network------------------------')
 		test_g = self.G.copy()
 		test_paths = self.paths.copy()
 		test_remaining_paths = self.paths_list.copy()
@@ -711,6 +711,7 @@ class Graph:
 		seed = size of random seed used to shuffle list of random edges
 		p = fraction of random edges to draw
 		'''
+		print('-------------------------Finding (near) global optimal network------------------------')
 
 		# time amount of time it takes
 		start = timeit.default_timer()
