@@ -1,5 +1,5 @@
 # DENetwork
-Unveiling Regulatory and Signaling Networks Behind Differentially Expressed Genes
+Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Genes
 
   * [About](#about)
   * [Installation](#installation)
