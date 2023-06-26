@@ -197,15 +197,15 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
 
 * 'results/influenza' contains the output of DENetwork:
-    * 'genes_go.txt' contains all 100 top-ranked genes kept ('-s 100' option)
-    * 'receptors_go.txt' contains all receptors amongst the top genes kept (targets that are also receptors are listed as receptors)
-    * 'targets_go.txt' contains all targets amongst the top genes kept
-    * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes kept
+    * 'genes_go.txt' contains all 100 top-ranked genes ('-s 100' option)
+    * 'receptors_go.txt' contains all receptors amongst the top genes (targets that are also receptors are listed as receptors)
+    * 'targets_go.txt' contains all targets amongst the top genes
+    * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes
     * 'optimal_network.sif' contains the connections between the top-ranked genes
     * 'optimal_network.noa' contains the attributes (type and node size) of the top-ranked genes
     * 'nodes_ranking.tsv' contains the ranking list of the top genes as well as their score changes and node type
 
-    The .sif and .noa file can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
+    The .sif and .noa files can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
 
 * 'figures/influenza' contains the following folders:
     * 'path_scores_distribution' contains distribution plots of the path scores 
@@ -213,13 +213,13 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
     Figure names without a number at the end were plotted when finding a local optimal solution, and those with a number at the end were plotted when finding the (near) optimal solution. 
 
-    If there is more than one improvement during the iterative refinement process, there will be additional an improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
+    If there is more than one improvement during the iterative refinement process, there will be an additional improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
   
 * 'files/influenza' contains the following files:
     * 'local_op_g.pickle' pickle file containing the local optimal graph object
     * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
-    * 'shortest_paths.pickle' pickle file containing the shortest paths found
-    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals
+    * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
+    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
 
 
 ## License
