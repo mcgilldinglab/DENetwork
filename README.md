@@ -5,11 +5,11 @@ Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Gene
   * [Installation](#installation)
   * [Usage](#usage)
   * [Example](#example)
-  * [RNA-seq datasets](#rna-seq-datasets)
   * [License](#license)
   * [Credits](#credits)
   * [Contact](#contact)
   * [Citation](#citation)
+  * [RNA-seq datasets](#rna-seq-datasets)
 
 
 ## About
@@ -224,10 +224,6 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
     * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
     * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
 
-## RNA-seq datasets
-
-The other 3 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
-
 ## License
 DENetwork is licensed under the terms of the MIT license.
 
@@ -239,3 +235,7 @@ Jun Ding jun.ding@mcgill.ca <br />
 Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## Citation
+
+## RNA-seq datasets
+
+The other 3 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
