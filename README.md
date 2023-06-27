@@ -118,7 +118,7 @@ optional arguments:
                         upregulated DE genes and -0.6 for downregulated DE
                         genes. Filters DE genes.
 ```
-If you already have a list of DE genes and do not need to run DESeq2, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
+You can also choose to use other differential gene analysis methods (such as edgeR). If you already have a list of DE genes and do not need to run DESeq2, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 
 **3. Run DENetwork**
