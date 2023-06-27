@@ -121,8 +121,8 @@ optional arguments:
                         upregulated DE genes and -0.6 for downregulated DE
                         genes. Filters DE genes.
 ```
-You can also choose to use other methods for differential gene expression analysis (e.g. edgeR). If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
+You can also choose to use other methods for differential gene expression analysis (e.g. edgeR). If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 **3. Run DENetwork**
 
