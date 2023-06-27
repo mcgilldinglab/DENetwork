@@ -42,7 +42,7 @@ $ conda install -c conda-forge r-base
 $ conda install -c conda-forge rpy2
 ```
 
-You can skip this step if you don't need to perform differential gene analysis, or are using another method (e.g. edgeR).
+You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
 5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
 
@@ -120,7 +120,7 @@ optional arguments:
                         upregulated DE genes and -0.6 for downregulated DE
                         genes. Filters DE genes.
 ```
-You can also choose to use other differential gene analysis methods (such as edgeR). If you already have a list of DE genes and do not need to run DESeq2, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
+You can also choose to use other methods for differential gene expression analysis (e.g. edgeR). If you already have a list of DE genes and do not need to run DESeq2, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 
 **3. Run DENetwork**
