@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(  name='DENetwork',
         version='1.0',
-        description='Unveiling Regulatory and Signaling Networks Behind Differentially Expressed Genes',
+        description='Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Genes',
         author='Ting-Yi Su',
         author_email='ting-yi.su@mail.mcgill.ca',
         url="https://github.com/mcgilldinglab/DENetwork",
