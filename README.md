@@ -5,6 +5,7 @@ Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Gene
   * [Installation](#installation)
   * [Usage](#usage)
   * [Example](#example)
+  * [RNA-seq datasets](#rna-seq-datasets)
   * [License](#license)
   * [Credits](#credits)
   * [Contact](#contact)
@@ -41,6 +42,8 @@ $ conda config --set channel_priority strict
 $ conda install -c conda-forge r-base
 $ conda install -c conda-forge rpy2
 ```
+
+You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
 5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
 
@@ -118,7 +121,7 @@ optional arguments:
                         upregulated DE genes and -0.6 for downregulated DE
                         genes. Filters DE genes.
 ```
-If you already have a list of DE genes and do not need to run DESeq2, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
+You can also choose to use other methods for differential gene expression analysis (e.g. edgeR). If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 
 **3. Run DENetwork**
@@ -197,15 +200,15 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
 
 * 'results/influenza' contains the output of DENetwork:
-    * 'genes_go.txt' contains all 100 top-ranked genes kept ('-s 100' option)
-    * 'receptors_go.txt' contains all receptors amongst the top genes kept (targets that are also receptors are listed as receptors)
-    * 'targets_go.txt' contains all targets amongst the top genes kept
-    * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes kept
+    * 'genes_go.txt' contains all 100 top-ranked genes ('-s 100' option)
+    * 'receptors_go.txt' contains all receptors amongst the top genes (targets that are also receptors are listed as receptors)
+    * 'targets_go.txt' contains all targets amongst the top genes
+    * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes
     * 'optimal_network.sif' contains the connections between the top-ranked genes
     * 'optimal_network.noa' contains the attributes (type and node size) of the top-ranked genes
     * 'nodes_ranking.tsv' contains the ranking list of the top genes as well as their score changes and node type
 
-    The .sif and .noa file can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
+    The .sif and .noa files can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
 
 * 'figures/influenza' contains the following folders:
     * 'path_scores_distribution' contains distribution plots of the path scores 
@@ -213,14 +216,17 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
     Figure names without a number at the end were plotted when finding a local optimal solution, and those with a number at the end were plotted when finding the (near) optimal solution. 
 
-    If there is more than one improvement during the iterative refinement process, there will be additional an improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
+    If there is more than one improvement during the iterative refinement process, there will be an additional improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
   
 * 'files/influenza' contains the following files:
     * 'local_op_g.pickle' pickle file containing the local optimal graph object
     * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
-    * 'shortest_paths.pickle' pickle file containing the shortest paths found
-    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals
+    * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
+    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
 
+## RNA-seq datasets
+
+The other 3 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
 
 ## License
 DENetwork is licensed under the terms of the MIT license.
