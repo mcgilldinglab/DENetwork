@@ -122,7 +122,7 @@ optional arguments:
                         genes. Filters DE genes.
 ```
 
-You can also choose to use other methods for differential gene expression analysis (e.g. edgeR). If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
+You can also choose to use other methods for differential gene expression analysis (e.g. edgeR), instead of DESeq2. If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 **3. Run DENetwork**
 
@@ -235,6 +235,20 @@ Jun Ding jun.ding@mcgill.ca <br />
 Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## Citation
+
+```
+@article {Su2023,
+  author = {Ting-Yi Su and Quazi S. Islam and Steven K. Huang and Carolyn J. Baglole and Jun Ding},
+  title = {DENetwork: Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Genes},
+  elocation-id = {2023.06.27.546719},
+  year = {2023},
+  doi = {10.1101/2023.06.27.546719},
+  publisher = {Cold Spring Harbor Laboratory},
+  URL = {https://www.biorxiv.org/content/early/2023/06/27/2023.06.27.546719},
+  eprint = {https://www.biorxiv.org/content/early/2023/06/27/2023.06.27.546719.full.pdf},
+  journal = {bioRxiv}
+}
+```
 
 ## RNA-seq datasets
 
