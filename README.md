@@ -83,15 +83,14 @@ optional arguments:
   -h, --help            show this help message and exit
 
   -n NAME, --name NAME, required
-                        name of disease condition, used to name the output
+                        name of disease condition; used to name the output
                         files
 
   -r RAW_COUNTS, --raw_counts RAW_COUNTS, required
                         comma- (.csv), tab-delimited (.tsv) or excel (.xlsx)
-                        file of raw RNA-seq gene expression data counts that
-                        contain samples of the wildtype and disease conditions
-                        (if includes samples for other conditions, they will
-                        be filtered out)
+                        file of raw RNA-seq gene expression data counts for
+                        samples of wildtype and disease conditions (samples of
+                        irrelevant conditions will be filtered out)
 
   -w WT_CONDITION, --wt_condition WT_CONDITION, required
                         wildtype (healthy) condition
@@ -109,8 +108,8 @@ optional arguments:
 
   -t {padj,pvalue}, --p_value_threshold_type {padj,pvalue}, optional
                         padj/pvalue, Optional, is padj by default. Choose
-                        whether to use the unadjusted (pvalue) or FDR adjusted
-                        (padj) p-values to filter DESeq2 result matrix.
+                        whether to use unadjusted (pvalue) or FDR adjusted
+                        (padj) p-values to filter the DESeq2 result matrix.
 
   -p P_VALUE_THRESHOLD, --p_value_threshold P_VALUE_THRESHOLD, optional
                         Float, Optional, is 0.05 by default. Filters the
@@ -139,7 +138,7 @@ optional arguments:
   -d DE_FILE, --de_file DE_FILE, required 
                         tab-delimited file (.tsv) of differentially-expressed
                         genes, along with their baseMean, log2FoldChange,
-                        lfcSE, stat, pvalue, and padj
+                        lfcSE, stat, pvalue, and padj values
 
   -g GENE_FILE, --gene_file GENE_FILE, required 
                         tab-delimited file (.tsv) containing all genes and
@@ -157,7 +156,7 @@ optional arguments:
                         optimal network; these selected genes make up the
                         final network (signaling/regulatory pathway) and can
                         be used for GO biological process & reactome pathway
-                        analysis
+                        analyses
 ```
 
 DENetwork should take a couple hours to run.

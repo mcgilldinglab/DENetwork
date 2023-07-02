@@ -145,11 +145,11 @@ def main():
 	# input arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n', '--name', required=True, help='name of the DENetwork model')  
-	parser.add_argument('-d', '--de_file', required=True, help='tab-delimited file (.tsv) of differentially-expressed genes, along with their baseMean, log2FoldChange, lfcSE, stat, pvalue, and padj')
+	parser.add_argument('-d', '--de_file', required=True, help='tab-delimited file (.tsv) of differentially-expressed genes, along with their baseMean, log2FoldChange, lfcSE, stat, pvalue, and padj values')
 	parser.add_argument('-g', '--gene_file', required=True, help='tab-delimited file (.tsv) containing all genes and their |log2FoldChange|')
 	parser.add_argument('-r', '--recep_file', required=True, help='text file (.txt) of disease-specific receptors')
 	parser.add_argument('-t', '--targets', required=True, help='choose whether the targets are differentially-expressed genes (de) OR transcription factors (tf)', choices=['de', 'tf'])
-	parser.add_argument('-s', '--num_significant_genes', required=True, type=int, help='number of top-ranked genes to select from the (near) optimal network; these selected genes make up the final network (signaling/regulatory pathway) and can be used for GO biological process & reactome pathway analysis')
+	parser.add_argument('-s', '--num_significant_genes', required=True, type=int, help='number of top-ranked genes to select from the (near) optimal network; these selected genes make up the final network (signaling/regulatory pathway) and can be used for GO biological process & reactome pathway analyses')
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
