@@ -72,8 +72,13 @@ class RunDESeq2:
 		df = []
 		if '.xlsx' in self.raw_counts:
 			df = pd.read_excel(self.raw_counts, index_col=None)
+		elif '.csv' in self.raw_counts:
+			df = pd.read_csv(self.raw_counts, index_col=None) # default delimiter is a comma
+		elif '.tsv' in self.raw_counts:
+			df = pd.read_csv(self.raw_counts, index_col=None, sep='\t')
 		else:
-			df = pd.read_csv(self.raw_counts, index_col=None)
+			print('Error! File type of RNA-seq data needs to be either .xlsx (Excel), .csv (comma-delimited), or .tsv (tab-delimited)!')
+			return
 
 
 		sample_names = list(df)[1:] # sample names
