@@ -45,7 +45,7 @@ $ conda install -c conda-forge rpy2
 
 You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
-5. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
+4. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
 
 ```R
 if (!require("BiocManager", quietly = TRUE))
