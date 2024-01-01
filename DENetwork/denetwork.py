@@ -54,11 +54,8 @@ class Data:
 			next(tf_f)
 			for line in tf_f: 
 				items = line.strip().split('\t')
-				if items[0] not in tfs_targets:
-					tfs_targets[items[0].upper()] = [items[1].upper()]
-				else: 
-					tfs_targets[items[0].upper()].append(items[1].upper())
-
+				tf, target = items[0].upper(), items[1].upper()
+				tfs_targets.setdefault(tf, []).append(target)
 
 		# get p-values for each TF
 		pbg = len(DEgenes)/num_genes # background probability of DE genes
@@ -141,7 +138,7 @@ class Data:
 
 
 class Graph:
-	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile):
+	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, gamma):
 		'''
 		script_dir = directory where scripts are located
 		name = name of graph
@@ -163,6 +160,7 @@ class Graph:
 		self.recs = []
 		self.num_recs = 0
 		self.d = Data(DEfile, genefile, TFfile, recepfile, PPIfile) # data
+		self.gamma = gamma
 		self.pos_g = nx.Graph() # reference graph for drawing
 		self.local_lambda_pen = 0.0 # found in STEP4, use to compare in STEP5
 		self.global_lambda_pen = 0.0  # found in STEP5, use to rank nodes
@@ -261,21 +259,21 @@ class Graph:
 				pairs.append((receptor, target))
 		return pairs
 
-	def shortest_paths(self, k, rec, target):
+	def shortest_paths(self, K, rec, target):
 		try:
-			return [p for p in nx.all_shortest_paths(self.G, source=rec, target=target) if len(p) <= k + 1]
+			return [p for p in nx.all_shortest_paths(self.G, source=rec, target=target) if len(p) <= K + 1]
 		except nx.exception.NetworkXNoPath:
 			return []
 
-	def get_shortest_paths(self, k):
+	def get_shortest_paths(self, K):
 		'''
-		k = # of intermediate nodes in path
+		K = # of intermediate nodes in path
 		returns dict of dict of shortest paths
 		'''
 		start = timeit.default_timer()
 		receptor_target_pairs = self.get_pairs()
 		p = Pool()
-		func = partial(self.shortest_paths, k)
+		func = partial(self.shortest_paths, K)
 		paths = p.starmap(func, receptor_target_pairs)
 		self.paths_list = sum(paths, [])
 		p.close()
@@ -300,8 +298,8 @@ class Graph:
 				for path in curr_paths:
 					score = 0.0
 					for i in range(len(path)-1):
-						score += float(self.nodes[path[i]]['log2fc']) + float(self.edges[path[i], path[i+1]]['ppi']) 
-					score +=  float(self.nodes[path[len(path) - 1]]['log2fc'])
+						score += (self.gamma * float(self.nodes[path[i]]['log2fc'])) + float(self.edges[path[i], path[i+1]]['ppi']) 
+					score +=  self.gamma * float(self.nodes[path[len(path) - 1]]['log2fc'])
 					scores[receptor][target].append(score)
 					scores_list.append(score)
 			if not scores[receptor]: # empty
@@ -427,9 +425,9 @@ class Graph:
 		print('Overlap between sources & targets:', len(set(self.recs) & set(self.targets)))
 		
 	# STEP2: filter out edges
-	def filter_paths(self, k, r, p_val): 
+	def filter_paths(self, K, r, p_val): 
 		'''
-		k = # of edges in path
+		K = # of intermediate nodes in path
 		r = True/False, whether to run shortest_path, if 'False' will assume that f is name of file with shortest paths
 		p_val = p value cutoff
 		returns a new graph w/ candidate paths of p-value < p_val
@@ -438,7 +436,7 @@ class Graph:
 		shortest_paths_pickle_file = osp.join(self.files_dir, 'shortest_paths.pickle')
 
 		if r: 
-			self.paths = self.get_shortest_paths(k)
+			self.paths = self.get_shortest_paths(K)
 			pickle_dump(self.paths, shortest_paths_pickle_file) # write shortest paths to file
 		else:
 			self.paths = pickle_load(shortest_paths_pickle_file) # read in shortest paths
@@ -447,7 +445,7 @@ class Graph:
 
 		# calculate score distribution
 		scores, scores_list = self.calculate_path_score()
-		print("# of paths found with", k, "intermediate nodes =", len(scores_list))
+		print("# of paths found with", K, "intermediate nodes =", len(scores_list))
 		print("Make sure that path scores are normally distributed:")
 
 		# plot path score distribution (should be roughly Gaussian) & save it to file
@@ -488,19 +486,19 @@ class Graph:
 	
 	# STEP2: filter out edges
 	# different from filter_paths; only use for finding the (near) global optimal graph
-	def filter_paths2(self, k, j, l): 
+	def filter_paths2(self, K, j, l): 
 		'''
-		k = # of intermediate nodes in path
+		K = # of intermediate nodes in path
 		j = # of times filter_paths has been called currently (starts from 0)
 		l = min # of paths to keep for each receptor-target pair
-		returns a new graph w/ candidate paths of p-value < p_val
+		returns a new graph consisting of l number of candidate paths (with the smallest p-values) between each source & target pair
 		'''
-		paths = self.get_shortest_paths(k)
+		paths = self.get_shortest_paths(K)
 		self.paths = paths
 		
 		# calculate score distribution
 		scores, scores_list = self.calculate_path_score()
-		print("# of paths found with", k, "intermediate nodes =", len(scores_list))
+		print("# of paths found with", K, "intermediate nodes =", len(scores_list))
 		print("Make sure that path scores are normally distributed:")
 
 		# plot path score distribution (should be roughly Gaussian) & save it to file
@@ -588,10 +586,11 @@ class Graph:
 	def best_signaling_network(self, i, j, curve):
 		'''
 		i = total number of paths to remove one by one
-		j = current number of times function is called
+		j = current number of times function is called (-1 is for finding the local optimum, >=0 is for finding the global optimum)
 		curve = shape of the graph, either 'concave' or 'convex'
 		'''
-		print('-------------------------Finding local optimal network------------------------')
+		if j == -1: # print only for initial run; don't print when used to find global network
+			print('-------------------------Finding local optimal network------------------------')
 		test_g = self.G.copy()
 		test_paths = self.paths.copy()
 		test_remaining_paths = self.paths_list.copy()
@@ -700,9 +699,9 @@ class Graph:
 		if j != -1: return lambda_pen
 
 	# STEP5: find (near) global optimal solution
-	def optimal_graph(self, k, l, N, i_local, t, curve, seed, p):
+	def optimal_graph(self, K, l, N, i_local, t, curve, seed, p, v):
 		'''
-		k = # of edges in shortest path
+		K = # of intermediate nodes in shortest path
 		l = # of paths to keep for each receptor-target pair in filter_paths2
 		N = # of top paths to keep
 		i_local = # of iterations used to find the best local signaling network
@@ -710,6 +709,7 @@ class Graph:
 		curve = concave/convex; shape of plot in best_signaling_network
 		seed = size of random seed used to shuffle list of random edges
 		p = fraction of random edges to draw
+		v = % improvement required to determine convergence of global optimal solution (& to terminate program)
 		'''
 		print('-------------------------Finding (near) global optimal network------------------------')
 
@@ -805,7 +805,7 @@ class Graph:
 			print("added:", self.G.number_of_nodes() ,"nodes,", self.G.number_of_edges() * 2, " edges", '(' + str((j+1)*M - j*M) + ')')
 			
 			# redo STEP2 (get new paths) then do STEP3
-			self.filter_paths2(k, j, l) # keeps l number of paths for each (receptor, target) pair
+			self.filter_paths2(K, j, l) # keeps l number of paths for each (receptor, target) pair
 
 			# redo STEP3 
 			self.top_N_paths(N, False)
@@ -834,7 +834,7 @@ class Graph:
 				num_no_improv += 1
 				print('NO IMPROVEMENT; current best S(Q) (calculated using local lambda penalty):', best_SQ, ", num_no_improv:", num_no_improv, ', num_improv: ', num_improv)
 				if improv_list != []:
-					if num_no_improv == t or stats.mean(improv_list) < 5: # have converges if have less than 5% improvement on average or have t continuous no improvements
+					if num_no_improv == t or stats.mean(improv_list) < v: # have converged if have less than v percent improvement on average or have t continuous no improvements
 						
 						# plot a curve of G vs G1 S(Q) (percentage improvement)
 						self.global_SQ = best_SQ
@@ -851,6 +851,19 @@ class Graph:
 						if len(improv_list) > 1:
 							# plot improvement
 							self.plot_improvement()
+						return
+
+				else: # no improvements at all
+					if num_no_improv == t:
+
+						self.global_SQ = best_SQ
+						print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv)
+						
+						# save optimal graph object
+						pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
+						
+						stop = timeit.default_timer()
+						print('Time needed to find the optimal graph: ', stop - start)
 						return
 						
 			else: 
@@ -895,8 +908,8 @@ class Graph:
 				for path in curr_paths:
 					score = 0.0
 					for i in range(len(path)-1):
-						score += float(G.nodes[path[i]]['log2fc']) + float(G.edges[path[i], path[i+1]]['ppi']) 
-					score +=  float(G.nodes[path[len(path) - 1]]['log2fc'])
+						score += (self.gamma * float(G.nodes[path[i]]['log2fc'])) + float(G.edges[path[i], path[i+1]]['ppi']) 
+					score += self.gamma * float(G.nodes[path[len(path) - 1]]['log2fc'])
 					scores[receptor][target].append(score)
 					scores_list.append(score)
 			if not scores[receptor]: # empty
@@ -1065,8 +1078,6 @@ class SignificantGenes:
 			for target in self.targets:
 				size = str(self.get_node_size(target))
 				noa_fname.write('\t'.join([target, 'target', size]) + '\n')
-			# get internal nodes
-			internal_nodes = list((set(self.g.nodes) - set(self.g.recs)) - set(self.g.targets))
 			for node in self.internal_nodes:
 				size = str(self.get_node_size(node))
 				noa_fname.write('\t'.join([node, 'internal', size]) + '\n')

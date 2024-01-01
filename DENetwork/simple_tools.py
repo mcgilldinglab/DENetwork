@@ -57,3 +57,11 @@ def initialize_dict_of_lists(keys):
 	for key in keys:
 		initialized_dict[key] = []
 	return initialized_dict
+
+# reads in items from file with any type of delimiter
+# and returns a list of the items
+def get_list_from_delimited_file(file, sep):
+	with open(file, 'r') as f:
+		lines = f.readlines()
+		list_of_items = [item.strip().split(sep) for item in lines]
+	return list_of_items

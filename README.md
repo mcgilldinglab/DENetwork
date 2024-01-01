@@ -157,6 +157,36 @@ optional arguments:
                         final network (signaling/regulatory pathway) and can
                         be used for GO biological process & reactome pathway
                         analyses
+
+  -G GAMMA, --gamma GAMMA, optional
+                        Float, Optional, is 1.0 by default. Used to change how
+                        much the log2 fold changes (node attributes) influence
+                        the path score.
+
+  -K MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, --max_num_intermediate_nodes_in_shortest_paths MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, optional
+                        Integer, Optional, is 5 by default. Parameter for
+                        finding shortest paths. Is the max number of
+                        intermediate nodes allowed when finding shortest paths
+                        between source and target pairs.
+
+  -p MAX_P_VALUE_OF_SIGNIFICANT_PATHS, --max_p_value_of_significant_paths MAX_P_VALUE_OF_SIGNIFICANT_PATHS, optional
+                        Float, Optional, is 0.01 by default. Is used as a cut-
+                        off for finding significant shortest paths.
+
+  -N NUM_TOP_PATHS, --num_top_paths NUM_TOP_PATHS, optional
+                        Integer, Optional, is 5 by default. Parameter for
+                        number of top significant shortest paths kept between
+                        each source and target pair.
+
+  -v PERCENT_IMPROVEMENT_FOR_CONVERGENCE, --percent_improvement_for_convergence PERCENT_IMPROVEMENT_FOR_CONVERGENCE, optional
+                        Float, Optional, is 5.0 by default. Percent
+                        improvement required to determine convergence of
+                        global optimal solution (& to terminate iterations).
+                        
+  -T NUM_TRYS, --num_trys NUM_TRYS, optional
+                        Int, Optional, is 5 by default. Number of trys allowed
+                        for continuous no improvements before terminating &
+                        determining the converged solution.
 ```
 
 DENetwork should take a couple hours to run.
@@ -172,7 +202,7 @@ Your RNA-seq data should have the following columns:
 * a column of gene counts for each sample, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
 ```bash
-$ python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output -t pvalue
+$ python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output
 ```
 
 After running DESeq2, you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
@@ -181,7 +211,7 @@ After running DESeq2, you will end up with the following files, in the 'example_
     2. 'DE_pos_influenza.tsv' contains all upregulated DE genes
     3. 'DE_neg_influenza.tsv' contains all downregulated DE genes. 
 
-  You can choose either of the 3 files for input into DENetwork. Ideally, you want to obtain a couple hundred (~200-400) DE genes for input into DENetwork. For example, DE_pos_influenza.tsv is chosen and it contains 236 upregulated DE genes. The optional input arguments (-b, -t, -p, -l) can be changed to increase or decrease the number of DE genes outputted. 
+  You can choose either of the 3 files for input into DENetwork. Ideally, you want to obtain tens to hundreds (~30-200) DE genes for input into DENetwork. For example, DE_pos_influenza.tsv is chosen and it contains 34 upregulated DE genes. The optional input arguments (-b, -t, -p, -l) can be changed to increase or decrease the number of DE genes outputted. 
 
 * 'gene_log2fc_influenza.tsv' which contains a gene column and a log2 fold change (in absolute value) column.
 
@@ -211,7 +241,7 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
 
 * 'figures/influenza' contains the following folders:
     * 'path_scores_distribution' contains distribution plots of the path scores 
-    * 'S_Q' contains S(Q) and score penalty plots
+    * 'S_Q' contains S(Q) and score penalty plots (from equation 5 in the manuscript)
 
     Figure names without a number at the end were plotted when finding a local optimal solution, and those with a number at the end were plotted when finding the (near) optimal solution. 
 
