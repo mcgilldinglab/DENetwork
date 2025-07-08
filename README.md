@@ -261,6 +261,7 @@ DENetwork was developed by the Ding Lab @ McGill University, and implemented by 
 
 ## Contact
 Jun Ding jun.ding@mcgill.ca <br />
+Bowen Zhao bowen.zhao@mail.mcgill.ca <br />
 Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## Citation
