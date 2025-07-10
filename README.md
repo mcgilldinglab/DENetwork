@@ -12,7 +12,7 @@ Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Gene
   * [RNA-seq datasets](#rna-seq-datasets)
 
 
-## About1
+## About
 
 Differential gene expression analysis of RNA-sequencing (RNA-seq) data offers crucial insights into biological differences between sample groups. However, the conventional focus on differentially-expressed (DE) genes often omits non-DE regulators, which are an integral part of such differences. Moreover, DE genes frequently serve as passive indicators of transcriptomic variations rather than active influencers, limiting their utility as intervention targets. To address these shortcomings, we have developed DENetwork. This innovative approach deciphers the intricate regulatory and signaling networks driving transcriptomic variations between conditions with distinct phenotypes. Unique in its integration of both DE and critical non-DE genes in a graphical model, DENetwork enhances the capabilities of traditional differential gene expression analysis tools, such as DESeq2. Our application of DENetwork to an array of simulated and real datasets showcases its potential to encapsulate biological differences, as demonstrated by the relevance and statistical significance of enriched gene functional terms. DENetwork offers a robust platform for systematically characterizing the biological mechanisms that underpin phenotypic differences, thereby augmenting our understanding of biological variations and facilitating the formulation of effective intervention strategies.
 
@@ -33,29 +33,9 @@ Python 3 is required.
 $ cd DENetwork
 $ python3 setup.py install
 ```
-
-3. You may need to upgrade your R version and rpy2 in order to install the R DESeq2 package. If you are using Anaconda, you can upgrade R and rpy2 as follows:
-
-```bash
-$ conda config --add channels conda-forge
-$ conda config --set channel_priority strict
-$ conda install -c conda-forge r-base
-$ conda install -c conda-forge rpy2
-```
+3. We use OmicVerse to perform differential analysis (DESeq2), please follow [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
 
 You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
-
-4. Install the R DESeq2 package. First, open your command line and type 'R' to open an R command prompt.
-
-```R
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("DESeq2")
-```
-
-Please refer to https://bioconductor.org/packages/release/bioc/html/DESeq2.html for the R DESeq2 documentation.
-
 
 ## Usage
 
@@ -68,60 +48,9 @@ Please refer to https://bioconductor.org/packages/release/bioc/html/DESeq2.html 
 
 **2. Run DESeq2**
 
-Navigate to the DENetwork folder containing scripts.
-```bash
-$ cd DENetwork
-```
+Please perform differential analysis by following the OmicVerse tutorial: [Bulk RNA-seq Differential Analysis with DESeq2](https://omicverse.readthedocs.io/en/latest/Tutorials-bulk/t_deseq2/).
 
-```bash
-usage: run_deseq2.py [-h] -n NAME -r RAW_COUNTS -w WT_CONDITION -d
-                     DISEASE_CONDITION -o OUTPUT_DIR [-b BASE_MEAN_THRESHOLD]
-                     [-t {padj,pvalue}] [-p P_VALUE_THRESHOLD]
-                     [-l LOG2_FOLD_CHANGE_THRESHOLD]
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-  -n NAME, --name NAME, required
-                        name of disease condition; used to name the output
-                        files
-
-  -r RAW_COUNTS, --raw_counts RAW_COUNTS, required
-                        comma- (.csv), tab-delimited (.tsv) or excel (.xlsx)
-                        file of raw RNA-seq gene expression data counts for
-                        samples of wildtype and disease conditions (samples of
-                        irrelevant conditions will be filtered out)
-
-  -w WT_CONDITION, --wt_condition WT_CONDITION, required
-                        wildtype (healthy) condition
-
-  -d DISEASE_CONDITION, --disease_condition DISEASE_CONDITION, required
-                        disease condition
-
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR, required
-                        output directory where output files are stored
-
-  -b BASE_MEAN_THRESHOLD, --base_mean_threshold BASE_MEAN_THRESHOLD, optional
-                        Integer, Optional, is 50 by default. Filters the
-                        DESeq2 result matrix to remove genes with low
-                        expression counts.
-
-  -t {padj,pvalue}, --p_value_threshold_type {padj,pvalue}, optional
-                        padj/pvalue, Optional, is padj by default. Choose
-                        whether to use unadjusted (pvalue) or FDR adjusted
-                        (padj) p-values to filter the DESeq2 result matrix.
-
-  -p P_VALUE_THRESHOLD, --p_value_threshold P_VALUE_THRESHOLD, optional
-                        Float, Optional, is 0.05 by default. Filters the
-                        DESeq2 result matrix to remove insignificant genes.
-
-  -l LOG2_FOLD_CHANGE_THRESHOLD, --log2_fold_change_threshold LOG2_FOLD_CHANGE_THRESHOLD, optional
-                        Positive Float, Optional, is 0.6 by default for
-                        upregulated DE genes and -0.6 for downregulated DE
-                        genes. Filters DE genes.
-```
-
-You can also choose to use other methods for differential gene expression analysis (e.g. edgeR), instead of DESeq2. If you choose to do so, you can skip steps 1 & 2, but please make sure that your input files for the next step are as indicated in the [Example](#example) section.
+You can also choose to use other methods for differential gene expression analysis (e.g. edgeR), instead of DESeq2. If you choose to do so, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
 **3. Run DENetwork**
 
@@ -189,7 +118,7 @@ optional arguments:
                         determining the converged solution.
 ```
 
-DENetwork should take a couple hours to run.
+DENetwork should take a couple minutes to run.
 There are many model parameters in DENetwork, so they are not listed as optional arguments in run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
 
 
