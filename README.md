@@ -130,11 +130,7 @@ Your RNA-seq data should have the following columns:
 * column of genes, with 'Gene' as the column name
 * a column of gene counts for each sample, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
 
-```bash
-$ python3 run_deseq2.py -n influenza -r example/GSE192528_RawCountsAnnotated.xlsx -w uninfected -d influenza -o example_deseq2_output
-```
-
-After running DESeq2, you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
+After running DESeq2 (OmicVerse), you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
 * 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. 
     1. 'DE_all_influenza.tsv' contains all DE genes
     2. 'DE_pos_influenza.tsv' contains all upregulated DE genes
@@ -181,15 +177,18 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
     * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
     * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
     * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
+ 
+ 
 
 ## License
 DENetwork is licensed under the terms of the MIT license.
 
 ## Credits
-DENetwork was developed by the Ding Lab @ McGill University, and implemented by Ting-Yi Su.
+DENetwork was developed by the Ding Lab @ McGill University.
 
 ## Contact
 Jun Ding jun.ding@mcgill.ca <br />
+Bowen Zhao bowen.zhao@mail.mcgill.ca <br />
 Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## Citation
@@ -210,6 +209,8 @@ Ting-Yi Su ting-yi.su@mail.mcgill.ca
 
 ## RNA-seq datasets
 
-The other 2 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
+The other 4 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
   * 'Alox15_macrophage_rna_seq_data.tsv': data for wildtype and Alox15-/- mouse macrophages
   * 'covid_rna_seq_data.tsv': data for patients tested positive or negative for the SARS-CoV-2 virus
+  * 'liver_cancer_data.tsv': data for cancer tissue and healthy tissue
+  * 'HuR_data.tsv': data for HuR knowdown experiment
