@@ -177,8 +177,10 @@ The output files of DENetwork are in the 'figures', 'files', and 'results' folde
     * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
     * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
     * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
- 
- 
+      
+* To systematically identify statistically significant key genes from DENetwork results, we employ a permutation-based statistical inference framework. For each dataset, we repeatedly randomize the edges of the PPI network (preserving node number and degree distribution), and run DENetwork on each permuted network to generate over 100,000 background gene scores, which together define an empirical null distribution. The statistical significance threshold is set at the empirical score corresponding to the top 5% of the background distribution. Any gene from the real network with a DENetwork score exceeding this threshold is considered a high-confidence regulatory candidate. This approach removes subjective cutoffs and ensures robust, statistically grounded gene prioritization.
+
+Please use the provided random PPI network files to run DENetwork to generate the background score distribution, and select key genes with DENetwork scores above the 5% of this background as significant candidates.
 
 ## License
 DENetwork is licensed under the terms of the MIT license.
