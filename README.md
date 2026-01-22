@@ -196,16 +196,15 @@ Ting-Yi Su ting-yi.su@mail.mcgill.ca
 ## Citation
 
 ```
-@article {Su2023,
-  author = {Ting-Yi Su and Quazi S. Islam and Steven K. Huang and Carolyn J. Baglole and Jun Ding},
-  title = {DENetwork: Unveiling Regulatory and Signaling Networks Behind Differentially-Expressed Genes},
-  elocation-id = {2023.06.27.546719},
-  year = {2023},
-  doi = {10.1101/2023.06.27.546719},
-  publisher = {Cold Spring Harbor Laboratory},
-  URL = {https://www.biorxiv.org/content/early/2023/06/27/2023.06.27.546719},
-  eprint = {https://www.biorxiv.org/content/early/2023/06/27/2023.06.27.546719.full.pdf},
-  journal = {bioRxiv}
+@article{zhao2025denetwork,
+  title={DENetwork unveils non-differentially expressed genes with functional relevance across conditions through information flow perturbation},
+  author={Zhao, Bowen and Su, Ting-Yi and Wang, Jingtao and Islam, Quazi S and Song, Kailu and Huang, Steven K and Allez, Matthieu and Fonseca, Gregory J and Baglole, Carolyn J and Ding, Jun},
+  journal={Nucleic Acids Research},
+  volume={53},
+  number={22},
+  pages={gkaf1350},
+  year={2025},
+  publisher={Oxford University Press}
 }
 ```
 
