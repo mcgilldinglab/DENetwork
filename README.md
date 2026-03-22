@@ -3,13 +3,13 @@ Unveiling regulatory and signaling networks behind differentially-expressed gene
 
   * [About](#about)
   * [Installation](#installation)
+  * [Repository Layout](#repository-layout)
   * [Usage](#usage)
   * [Example](#example)
   * [License](#license)
   * [Credits](#credits)
   * [Contact](#contact)
   * [Citation](#citation)
-  * [RNA-seq datasets](#rna-seq-datasets)
 
 
 ## About
@@ -39,30 +39,40 @@ $ python -c "import omicverse, networkx, matplotlib, scipy, kneed, statsmodels, 
 
 For GPU-based installation, or other OmicVerse environments, please also see the official [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
 
+## Repository Layout
+
+The repository is organized around the files needed for the OmicVerse + DENetwork workflow:
+
+* `DENetwork/run_denetwork.py`: main DENetwork entry point
+* `DENetwork/denetwork.py`: core DENetwork algorithm
+* `DENetwork/simple_tools.py`: helper functions
+* `DENetwork/data/ppi_ptm_pd_hgnc.txt`: PPI / protein-DNA prior network
+* `DENetwork/example/`: influenza example input files
+* `tutorial/run_omicverse_deg.py`: OmicVerse differential expression script
+* `tutorial/configs/influenza_article_standard.json`: example OmicVerse config
+
 ## Usage
 
-**1. Obtain the following data files:**
-
-  * RNA-seq gene expression count data for wildtype (healthy) and disease samples (required to run DESeq2)
-  * Receptors specific to your disease condition (required to run DENetwork)
-
-  The data should be formatted as shown in the [Example](#example) section. 
-
-**2. Run DESeq2**
-
-This repository now provides a tutorial script for running OmicVerse differential analysis and exporting DENetwork-ready files:
+**1. Run differential expression analysis with OmicVerse**
 
 ```bash
 $ conda activate omicverse
 $ python tutorial/run_omicverse_deg.py --config tutorial/configs/influenza_article_standard.json
 ```
 
-The provided config file applies the article-style filtering criteria:
+The provided config applies the article-style filtering criteria:
 * `baseMean > 50`
 * `padj < 0.05`
 * `|log2FoldChange| >= 0.6`
 
-You can also run the script without a config file and specify the input table, treatment samples, and control samples directly:
+The script writes DENetwork-ready files to `.tmp/tutorial_influenza_article_standard`, including:
+* `DE_pos_influenza.tsv`
+* `DE_neg_influenza.tsv`
+* `DE_all_influenza.tsv`
+* `gene_log2fc_influenza.tsv`
+* `res_matrix_influenza.tsv`
+
+You can also run the script without a config file and specify the input table and sample labels directly:
 
 ```bash
 $ python tutorial/run_omicverse_deg.py \
@@ -76,162 +86,57 @@ $ python tutorial/run_omicverse_deg.py \
     --control-label uninfected
 ```
 
-This script writes the same DENetwork input file types used in `example_deseq2_output`, including:
-* `DE_all_<name>.tsv`
-* `DE_pos_<name>.tsv`
-* `DE_neg_<name>.tsv`
-* `gene_log2fc_<name>.tsv`
-* `<name>_count_data.tsv`
-* `<name>_meta_data.tsv`
-* `<name>_normalized_matrix.tsv`
-* `res_matrix_<name>.tsv`
-
-The script is implemented in `tutorial/run_omicverse_deg.py`, and the provided article-standard influenza config is in `tutorial/configs/influenza_article_standard.json`.
-
-You can also choose to use other methods for differential gene expression analysis (e.g. edgeR), instead of DESeq2. If you choose to do so, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
-
-**3. Run DENetwork**
+**2. Run DENetwork**
 
 ```bash
-usage: DENetwork/run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r
-                                  RECEP_FILE -t {de,tf} -s
-                                  NUM_SIGNIFICANT_GENES
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-  -n NAME, --name NAME, required  
-                        name of the DENetwork model
-
-  -d DE_FILE, --de_file DE_FILE, required 
-                        tab-delimited file (.tsv) of differentially-expressed
-                        genes, along with their baseMean, log2FoldChange,
-                        lfcSE, stat, pvalue, and padj values
-
-  -g GENE_FILE, --gene_file GENE_FILE, required 
-                        tab-delimited file (.tsv) containing all genes and
-                        their |log2FoldChange|
-
-  -r RECEP_FILE, --recep_file RECEP_FILE, required 
-                        text file (.txt) of disease-specific receptors
-
-  -t {de,tf}, --targets {de,tf}, required 
-                        choose whether the targets are differentially-
-                        expressed genes (de) OR transcription factors (tf)
-
-  -s NUM_SIGNIFICANT_GENES, --num_significant_genes NUM_SIGNIFICANT_GENES, required 
-                        number of top-ranked genes to select from the (near)
-                        optimal network; these selected genes make up the
-                        final network (signaling/regulatory pathway) and can
-                        be used for GO biological process & reactome pathway
-                        analyses
-
-  -G GAMMA, --gamma GAMMA, optional
-                        Float, Optional, is 1.0 by default. Used to change how
-                        much the log2 fold changes (node attributes) influence
-                        the path score.
-
-  -K MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, --max_num_intermediate_nodes_in_shortest_paths MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, optional
-                        Integer, Optional, is 5 by default. Parameter for
-                        finding shortest paths. Interpreted as the maximum
-                        number of nodes allowed in a source-target path,
-                        consistent with the paper.
-
-  -p MAX_P_VALUE_OF_SIGNIFICANT_PATHS, --max_p_value_of_significant_paths MAX_P_VALUE_OF_SIGNIFICANT_PATHS, optional
-                        Float, Optional, is 0.01 by default. Is used as a cut-
-                        off for finding significant shortest paths.
-
-  -N NUM_TOP_PATHS, --num_top_paths NUM_TOP_PATHS, optional
-                        Integer, Optional, is 5 by default. Parameter for
-                        number of top significant shortest paths kept between
-                        each source and target pair.
-
-  -v PERCENT_IMPROVEMENT_FOR_CONVERGENCE, --percent_improvement_for_convergence PERCENT_IMPROVEMENT_FOR_CONVERGENCE, optional
-                        Float, Optional, is 5.0 by default. Percent
-                        improvement required to determine convergence of
-                        global optimal solution (& to terminate iterations).
-                        
-  -T NUM_TRYS, --num_trys NUM_TRYS, optional
-                        Int, Optional, is 5 by default. Number of trys allowed
-                        for continuous no improvements before terminating &
-                        determining the converged solution.
-
-  -P NUM_WORKERS, --num_workers NUM_WORKERS, optional
-                        Int, Optional. Number of worker processes used for
-                        shortest-path search and node ranking.
+$ conda activate omicverse
+$ python DENetwork/run_denetwork.py \
+    -n influenza \
+    -d .tmp/tutorial_influenza_article_standard/DE_pos_influenza.tsv \
+    -g .tmp/tutorial_influenza_article_standard/gene_log2fc_influenza.tsv \
+    -r DENetwork/example/receptors_influenza.txt \
+    -t de \
+    -s 100
 ```
 
-DENetwork should take a couple minutes to run.
-There are many model parameters in DENetwork, so they are not listed as optional arguments in run_denetwork.py. They can be manually changed in the run_denetwork.py file. Otherwise, the default model parameters are used.
+For all options:
+
+```bash
+$ python DENetwork/run_denetwork.py -h
+```
+
+Output files are written to:
+* `DENetwork/results/<model_name>/`
+* `DENetwork/files/<model_name>/`
+* `DENetwork/figures/<model_name>/`
 
 
 ## Example
 
-The 'example' folder contains an example of RNA-seq gene expression data (GSE192528_RawCountsAnnotated.xlsx) and disease-specific receptors (receptors_influenza.txt) for an IAV (influenza) dataset.
+The included influenza example uses:
+* `DENetwork/example/GSE192528_RawCountsAnnotated.xlsx`
+* `DENetwork/example/receptors_influenza.txt`
+* `DENetwork/data/ppi_ptm_pd_hgnc.txt`
 
-Your RNA-seq data should have the following columns:
-* column of genes, with 'Gene' as the column name
-* a column of gene counts for each sample, with the disease/wildtype condition name in the column name (e.g. A22_influenza as the column name for an influenza sample)
-
-After running DESeq2 (OmicVerse), you will end up with the following files, in the 'example_deseq2_output' folder, that you will need to run DENetwork:
-* 3 .tsv files containing differentially-expressed (DE) genes starting with 'DE'. 
-    1. 'DE_all_influenza.tsv' contains all DE genes
-    2. 'DE_pos_influenza.tsv' contains all upregulated DE genes
-    3. 'DE_neg_influenza.tsv' contains all downregulated DE genes. 
-
-  You can choose either of the 3 files for input into DENetwork. Ideally, you want to obtain tens to hundreds (~30-200) DE genes for input into DENetwork. For example, DE_pos_influenza.tsv is chosen and it contains 34 upregulated DE genes. The optional input arguments (-b, -t, -p, -l) can be changed to increase or decrease the number of DE genes outputted. 
-
-* 'gene_log2fc_influenza.tsv' which contains a gene column and a log2 fold change (in absolute value) column.
-
-The same file set can be generated directly from the tutorial script:
+Run the full example with:
 
 ```bash
 $ conda activate omicverse
 $ python tutorial/run_omicverse_deg.py --config tutorial/configs/influenza_article_standard.json
+$ python DENetwork/run_denetwork.py -n influenza -d .tmp/tutorial_influenza_article_standard/DE_pos_influenza.tsv -g .tmp/tutorial_influenza_article_standard/gene_log2fc_influenza.tsv -r DENetwork/example/receptors_influenza.txt -t de -s 100
 ```
 
-This command writes the influenza example outputs to `.tmp/tutorial_influenza_article_standard`.
+This produces:
+* `DENetwork/results/influenza/optimal_network.sif`
+* `DENetwork/results/influenza/optimal_network.noa`
+* `DENetwork/results/influenza/nodes_ranking.tsv`
+* `DENetwork/results/influenza/genes_go.txt`
+* `DENetwork/files/influenza/`
+* `DENetwork/figures/influenza/`
 
-The 'data' folder contains 2 files that are mandatory for running DENetwork:
-* 'ppi_ptm_pd_hgnc.txt' contains a list of PPI scores (both protein-protein and protein-dna) 
-* 'TFs.txt' contains a list of all TFs that are used to find significant TFs, if TFs are chosen as the target nodes
+The `.sif` and `.noa` files can be imported into Cytoscape, and the `*_go.txt` files can be used for enrichment analysis.
 
-```bash
-$ conda activate omicverse
-$ python DENetwork/run_denetwork.py -n influenza -d DENetwork/example_deseq2_output/DE_pos_influenza.tsv -g DENetwork/example_deseq2_output/gene_log2fc_influenza.tsv -r DENetwork/example/receptors_influenza.txt -t de -s 100
-```
-
-You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
-
-The output files of DENetwork are in the 'figures', 'files', and 'results' folders. Each DENetwork model has its own subdirectory within each of these 3 folders. In this example, the subdirectory is named 'influenza' (using the '-n influenza' option when running DENetwork).
-
-
-* 'results/influenza' contains the output of DENetwork:
-    * 'genes_go.txt' contains all 100 top-ranked genes ('-s 100' option)
-    * 'receptors_go.txt' contains all receptors amongst the top genes (targets that are also receptors are listed as receptors)
-    * 'targets_go.txt' contains all targets amongst the top genes
-    * 'internal_nodes.txt' contains all intermediate signaling/regulatory genes amonst the top genes
-    * 'optimal_network.sif' contains the connections between the top-ranked genes
-    * 'optimal_network.noa' contains the attributes (type and node size) of the top-ranked genes
-    * 'nodes_ranking.tsv' contains the ranking list of the top genes as well as their score changes and node type
-
-    The .sif and .noa files can be imported into Cytoscape to view the final signaling/regulatory network. The genes in the .txt files can be used for GO term enrichment and pathway analyses.
-
-* 'figures/influenza' contains the following folders:
-    * 'path_scores_distribution' contains distribution plots of the path scores 
-    * 'S_Q' contains S(Q) and score penalty plots (from equation 5 in the manuscript)
-
-    Figure names without a number at the end were plotted when finding a local optimal solution, and those with a number at the end were plotted when finding the (near) optimal solution. 
-
-    If there is more than one improvement during the iterative refinement process, there will be an additional improvement plot named 'step5_improvement_8_5_5.svg' (where l=8, N=5, t=5 in the optimal_graph function in denetwork.py)
-  
-* 'files/influenza' contains the following files:
-    * 'local_op_g.pickle' pickle file containing the local optimal graph object
-    * 'optimal_graph_8_5_5.pickle' pickle file containing the (near) optimal graph object
-    * 'shortest_paths.pickle' pickle file containing the shortest paths found in the initial fully-connected network
-    * 'nodes_ranking_score_differences_8_5_5.txt' and 'nodes_ranking_scores_8_5_5.txt' contain the score differences and scores of node-removals in the (near) optimal network
-      
-* To systematically identify statistically significant key genes from DENetwork results, we employ a permutation-based statistical inference framework. For each dataset, we repeatedly randomize the edges of the PPI network (preserving node number and degree distribution), and run DENetwork on each permuted network to generate over 100,000 background gene scores, which together define an empirical null distribution. The statistical significance threshold is set at the empirical score corresponding to the top 5% of the background distribution. Any gene from the real network with a DENetwork score exceeding this threshold is considered a high-confidence regulatory candidate. This approach removes subjective cutoffs and ensures robust, statistically grounded gene prioritization.
+To systematically identify statistically significant key genes from DENetwork results, we employ a permutation-based statistical inference framework. For each dataset, we repeatedly randomize the edges of the PPI network (preserving node number and degree distribution), and run DENetwork on each permuted network to generate over 100,000 background gene scores, which together define an empirical null distribution. The statistical significance threshold is set at the empirical score corresponding to the top 5% of the background distribution. Any gene from the real network with a DENetwork score exceeding this threshold is considered a high-confidence regulatory candidate. This approach removes subjective cutoffs and ensures robust, statistically grounded gene prioritization.
 
 Please use the provided random PPI network files to run DENetwork to generate the background score distribution, and select key genes with DENetwork scores above the 5% of this background as significant candidates.
 
@@ -260,11 +165,3 @@ Ting-Yi Su ting-yi.su@mail.mcgill.ca
   publisher={Oxford University Press}
 }
 ```
-
-## RNA-seq datasets
-
-The other 4 RNA-seq datasets used in the manuscript are available under the 'rna_seq_data' folder.
-  * 'Alox15_macrophage_rna_seq_data.tsv': data for wildtype and Alox15-/- mouse macrophages
-  * 'covid_rna_seq_data.tsv': data for patients tested positive or negative for the SARS-CoV-2 virus
-  * 'liver_cancer_data.tsv': data for cancer tissue and healthy tissue
-  * 'HuR_data.tsv': data for HuR knowdown experiment
