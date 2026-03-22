@@ -46,7 +46,8 @@ The repository is organized around the files needed for the OmicVerse + DENetwor
 * `DENetwork/run_denetwork.py`: main DENetwork entry point
 * `DENetwork/denetwork.py`: core DENetwork algorithm
 * `DENetwork/simple_tools.py`: helper functions
-* `DENetwork/data/ppi_ptm_pd_hgnc.txt`: PPI / protein-DNA prior network
+* `DENetwork/data/ppi_ptm_pd_hgnc.txt`: default human prior network
+* `DENetwork/data/ppi_biogrid_mouse.txt`: default mouse prior network
 * `DENetwork/example/`: influenza example input files
 * `tutorial/run_omicverse_deg.py`: OmicVerse differential expression script
 * `tutorial/configs/influenza_article_standard.json`: example OmicVerse config
@@ -98,6 +99,8 @@ $ python DENetwork/run_denetwork.py \
     -t de \
     -s 100
 ```
+
+By default, `run_denetwork.py` uses the human prior network. Add `--species mouse` to use `DENetwork/data/ppi_biogrid_mouse.txt`.
 
 For all options:
 

@@ -4,13 +4,8 @@
 __pycache__/
 *.py[cod]
 
+DENetwork/data/biogrid/
+
 DENetwork/results/*/
 DENetwork/files/*/
 DENetwork/figures/*/
-
-!DENetwork/results/influenza/
-!DENetwork/results/influenza/**
-!DENetwork/files/influenza/
-!DENetwork/files/influenza/**
-!DENetwork/figures/influenza/
-!DENetwork/figures/influenza/**

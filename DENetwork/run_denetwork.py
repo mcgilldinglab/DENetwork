@@ -179,13 +179,20 @@ def main():
 	parser.add_argument('-v', '--percent_improvement_for_convergence', required=False, default=5, type=float, help='Float, Optional, is 5.0 by default. Percent improvement required to determine convergence of global optimal solution (& to terminate iterations).')
 	parser.add_argument('-T', '--num_trys', required=False, default=5, type=int, help='Int, Optional, is 5 by default. Number of trys allowed for continuous no improvements before terminating & determining the converged solution.')
 	parser.add_argument('-P', '--num_workers', required=False, default=(os.cpu_count() or 1), type=int, help='Int, Optional. Number of worker processes used for shortest-path search and node ranking.')
+	parser.add_argument('--species', required=False, default='human', choices=['human', 'mouse'], help='Species used to choose the default prior network. human uses ppi_ptm_pd_hgnc.txt and mouse uses ppi_biogrid_mouse.txt.')
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
 	tf_file = '' # DE genes as targets
 	if args.targets == 'tf': # TFs as targets
 		tffile = osp.join(data_dir, 'TFs.txt')
-	ppi_file = osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt')
+	species_to_ppi = {
+		'human': osp.join(data_dir, 'ppi_ptm_pd_hgnc.txt'),
+		'mouse': osp.join(data_dir, 'ppi_biogrid_mouse.txt'),
+	}
+	ppi_file = species_to_ppi[args.species]
+	if not osp.exists(ppi_file):
+		raise FileNotFoundError(f"PPI file not found for species '{args.species}': {ppi_file}")
 
 
 	# record running time and total memory usage
