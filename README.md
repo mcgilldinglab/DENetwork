@@ -25,11 +25,7 @@ Differential gene expression analysis of RNA-sequencing (RNA-seq) data offers cr
 
 ## Installation
 
-```bash
-$ cd DENetwork
-```
-
-A practical environment for both OmicVerse and DENetwork is:
+We use OmicVerse for differential expression analysis and install the additional dependencies required to run DENetwork:
 
 ```bash
 $ conda create -n omicverse python=3.10
