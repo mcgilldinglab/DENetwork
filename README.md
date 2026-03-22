@@ -33,7 +33,18 @@ Python 3 is required.
 $ cd DENetwork
 $ python3 setup.py install
 ```
-3. We use OmicVerse to perform differential analysis (DESeq2), please follow [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
+3. We use OmicVerse to perform differential analysis (DESeq2-compatible workflow through PyDESeq2). One simple setup is:
+
+```bash
+$ conda create -n omicverse python=3.10
+$ conda activate omicverse
+$ conda install pytorch torchvision torchaudio cpuonly -c pytorch
+$ conda install pyg -c pyg
+$ conda install omicverse pydeseq2 cytoolz frozendict -c conda-forge -c bioconda
+$ python -c "import omicverse"
+```
+
+For GPU-based installation, or other OmicVerse environments, please also see the official [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
 
 You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
@@ -48,7 +59,43 @@ You can skip this step if you don't need to perform differential gene expression
 
 **2. Run DESeq2**
 
-Please perform differential analysis by following the OmicVerse tutorial: [Bulk RNA-seq Differential Analysis with DESeq2](https://omicverse.readthedocs.io/en/latest/Tutorials-bulk/t_deseq2/).
+This repository now provides a tutorial script for running OmicVerse differential analysis and exporting DENetwork-ready files:
+
+```bash
+$ conda activate omicverse
+$ python tutorial/run_omicverse_deg.py --config tutorial/configs/influenza_article_standard.json
+```
+
+The provided config file applies the article-style filtering criteria:
+* `baseMean > 50`
+* `padj < 0.05`
+* `|log2FoldChange| >= 0.6`
+
+You can also run the script without a config file and specify the input table, treatment samples, and control samples directly:
+
+```bash
+$ python tutorial/run_omicverse_deg.py \
+    --input DENetwork/example/GSE192528_RawCountsAnnotated.xlsx \
+    --name influenza \
+    --output-dir tutorial/output_influenza \
+    --gene-column Gene \
+    --treatment-pattern influenza \
+    --control-pattern uninfected \
+    --treatment-label influenza \
+    --control-label uninfected
+```
+
+This script writes the same DENetwork input file types used in `example_deseq2_output`, including:
+* `DE_all_<name>.tsv`
+* `DE_pos_<name>.tsv`
+* `DE_neg_<name>.tsv`
+* `gene_log2fc_<name>.tsv`
+* `<name>_count_data.tsv`
+* `<name>_meta_data.tsv`
+* `<name>_normalized_matrix.tsv`
+* `res_matrix_<name>.tsv`
+
+The script is implemented in `tutorial/run_omicverse_deg.py`, and the provided article-standard influenza config is in `tutorial/configs/influenza_article_standard.json`.
 
 You can also choose to use other methods for differential gene expression analysis (e.g. edgeR), instead of DESeq2. If you choose to do so, please make sure that your input files for the next step are as indicated in the [Example](#example) section.
 
@@ -139,6 +186,15 @@ After running DESeq2 (OmicVerse), you will end up with the following files, in t
   You can choose either of the 3 files for input into DENetwork. Ideally, you want to obtain tens to hundreds (~30-200) DE genes for input into DENetwork. For example, DE_pos_influenza.tsv is chosen and it contains 34 upregulated DE genes. The optional input arguments (-b, -t, -p, -l) can be changed to increase or decrease the number of DE genes outputted. 
 
 * 'gene_log2fc_influenza.tsv' which contains a gene column and a log2 fold change (in absolute value) column.
+
+The same file set can be generated directly from the tutorial script:
+
+```bash
+$ conda activate omicverse
+$ python tutorial/run_omicverse_deg.py --config tutorial/configs/influenza_article_standard.json
+```
+
+This command writes the influenza example outputs to `.tmp/tutorial_influenza_article_standard`.
 
 The 'data' folder contains 2 files that are mandatory for running DENetwork:
 * 'ppi_ptm_pd.hgnc.txt' contains a list of PPI scores (both protein-protein and protein-dna) 

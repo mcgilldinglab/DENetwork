@@ -1,0 +1,18 @@
+{
+  "input": "../../DENetwork/example/GSE192528_RawCountsAnnotated.xlsx",
+  "name": "influenza",
+  "output_dir": "../../.tmp/tutorial_influenza_article_standard",
+  "gene_column": "Gene",
+  "sheet_name": 0,
+  "treatment_pattern": "influenza",
+  "control_pattern": "uninfected",
+  "treatment_label": "influenza",
+  "control_label": "uninfected",
+  "n_cpus": 8,
+  "padj_threshold": 0.05,
+  "fc_threshold": 0.6,
+  "fold_threshold": 0,
+  "logp_max": 6,
+  "min_base_mean": 50.0,
+  "min_log2_base_mean": -1.0
+}

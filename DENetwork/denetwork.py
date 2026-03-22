@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statistics as stats
 import scipy.stats
+from collections import Counter
 import math
 from kneed import KneeLocator
 import random
@@ -138,7 +139,7 @@ class Data:
 
 
 class Graph:
-	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, gamma):
+	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, gamma, num_workers=None):
 		'''
 		script_dir = directory where scripts are located
 		name = name of graph
@@ -161,6 +162,7 @@ class Graph:
 		self.num_recs = 0
 		self.d = Data(DEfile, genefile, TFfile, recepfile, PPIfile) # data
 		self.gamma = gamma
+		self.num_workers = max(1, int(num_workers)) if num_workers is not None else max(1, os.cpu_count() or 1)
 		self.pos_g = nx.Graph() # reference graph for drawing
 		self.local_lambda_pen = 0.0 # found in STEP4, use to compare in STEP5
 		self.global_lambda_pen = 0.0  # found in STEP5, use to rank nodes
@@ -184,7 +186,7 @@ class Graph:
 		self.sq_fig_dir = osp.join(self.figures_dir, 'S_Q')
 		check_create_dir(self.sq_fig_dir)
 	
-	def update_all(self, prev_g, prev_paths, prev_paths_list):
+	def update_all(self, prev_g, prev_paths, prev_paths_list, prev_recs=None, prev_targets=None):
 		# update node, edge, and path attributes
 		self.G = prev_g
 		self.nodes = prev_g.nodes
@@ -194,6 +196,15 @@ class Graph:
 		self.paths = prev_paths
 		self.paths_list = prev_paths_list 
 		self.num_paths = len(prev_paths_list)
+		if prev_recs is None:
+			prev_recs = [rec for rec in prev_paths.keys() if rec in prev_g.nodes]
+		if prev_targets is None:
+			remaining_targets = [list(v.keys()) for _, v in prev_paths.items()]
+			prev_targets = list(set(sum(remaining_targets, [])))
+		self.recs = prev_recs
+		self.num_recs = len(prev_recs)
+		self.targets = prev_targets
+		self.num_targets = len(prev_targets)
 	
 	#------------------------------------------print graph---------------------------------
 	
@@ -249,32 +260,83 @@ class Graph:
 				path_dict[path[0]][path[len(path)-1]] = temp
 		return path_dict
 	
-	def get_pairs(self):
+	def get_pairs(self, recs=None, targets=None):
 		'''
 		returns a list of (receptor, target) pairs
 		'''
+		if recs is None:
+			recs = self.recs
+		if targets is None:
+			targets = self.targets
 		pairs = []
-		for receptor in self.recs:
-			for target in self.targets:
+		for receptor in recs:
+			for target in targets:
 				pairs.append((receptor, target))
 		return pairs
 
 	def shortest_paths(self, K, rec, target):
 		try:
-			return [p for p in nx.all_shortest_paths(self.G, source=rec, target=target) if len(p) <= K + 1]
+			return [p for p in nx.all_shortest_paths(self.G, source=rec, target=target) if len(p) <= K]
 		except nx.exception.NetworkXNoPath:
 			return []
 
-	def get_shortest_paths(self, K):
+	def predecessor_shortest_paths(self, predecessors, source, target):
+		if target == source:
+			return [[source]]
+		if target not in predecessors:
+			return []
+		paths = []
+		stack = [(target, [target])]
+		while stack:
+			node, suffix = stack.pop()
+			if node == source:
+				paths.append(list(reversed(suffix)))
+				continue
+			for pred in predecessors.get(node, []):
+				stack.append((pred, suffix + [pred]))
+		return paths
+
+	def shortest_paths_from_receptor(self, K, rec, targets=None):
+		if rec not in self.G:
+			return []
+		max_edges = max(K - 1, 0)
+		try:
+			predecessors, seen = nx.predecessor(self.G, source=rec, cutoff=max_edges, return_seen=True)
+		except nx.exception.NetworkXNoPath:
+			return []
+
+		if targets is None:
+			targets = self.targets
+		paths = []
+		for target in targets:
+			if target not in seen or seen[target] > max_edges:
+				continue
+			paths.extend(self.predecessor_shortest_paths(predecessors, rec, target))
+		return paths
+
+	def path_score_for_path(self, graph, path):
+		score = 0.0
+		for i in range(len(path)-1):
+			score += (self.gamma * float(graph.nodes[path[i]]['log2fc'])) + float(graph.edges[path[i], path[i+1]]['ppi'])
+		score += self.gamma * float(graph.nodes[path[len(path) - 1]]['log2fc'])
+		return score
+
+	def undirected_path_edges(self, path):
+		return [tuple(sorted((path[i], path[i+1]))) for i in range(len(path)-1)]
+
+	def get_shortest_paths(self, K, recs=None, targets=None):
 		'''
-		K = # of intermediate nodes in path
+		K = max number of nodes in path
 		returns dict of dict of shortest paths
 		'''
 		start = timeit.default_timer()
-		receptor_target_pairs = self.get_pairs()
-		p = Pool()
-		func = partial(self.shortest_paths, K)
-		paths = p.starmap(func, receptor_target_pairs)
+		receptors = list(self.recs if recs is None else recs)
+		targets = list(self.targets if targets is None else targets)
+		workers = min(self.num_workers, max(1, len(receptors)))
+		chunksize = max(1, len(receptors) // (workers * 8))
+		p = Pool(processes=workers)
+		func = partial(self.shortest_paths_from_receptor, K, targets=targets)
+		paths = p.map(func, receptors, chunksize=chunksize)
 		self.paths_list = sum(paths, [])
 		p.close()
 		p.join()
@@ -292,14 +354,9 @@ class Graph:
 			scores[receptor] = {}
 			for target in self.paths[receptor]:
 				curr_paths = self.paths[receptor][target] # more than one shortest path
-				# score = product of fc of all nodes x product of ppi score of all edges
-				# since is in log2, can add them up
 				scores[receptor][target] = []
 				for path in curr_paths:
-					score = 0.0
-					for i in range(len(path)-1):
-						score += (self.gamma * float(self.nodes[path[i]]['log2fc'])) + float(self.edges[path[i], path[i+1]]['ppi']) 
-					score +=  self.gamma * float(self.nodes[path[len(path) - 1]]['log2fc'])
+					score = self.path_score_for_path(self.G, path)
 					scores[receptor][target].append(score)
 					scores_list.append(score)
 			if not scores[receptor]: # empty
@@ -427,7 +484,7 @@ class Graph:
 	# STEP2: filter out edges
 	def filter_paths(self, K, r, p_val): 
 		'''
-		K = # of intermediate nodes in path
+		K = max number of nodes in path
 		r = True/False, whether to run shortest_path, if 'False' will assume that f is name of file with shortest paths
 		p_val = p value cutoff
 		returns a new graph w/ candidate paths of p-value < p_val
@@ -445,9 +502,8 @@ class Graph:
 
 		# calculate score distribution
 		scores, scores_list = self.calculate_path_score()
-		print("# of paths found with", K, "intermediate nodes =", len(scores_list))
+		print("# of paths found with up to", K, "nodes =", len(scores_list))
 		print("Make sure that path scores are normally distributed:")
-
 		# plot path score distribution (should be roughly Gaussian) & save it to file
 		plt.figure()
 		plt.hist(scores_list, bins=20)
@@ -486,21 +542,20 @@ class Graph:
 	
 	# STEP2: filter out edges
 	# different from filter_paths; only use for finding the (near) global optimal graph
-	def filter_paths2(self, K, j, l): 
+	def filter_paths2(self, K, j, l, recs=None, targets=None):
 		'''
-		K = # of intermediate nodes in path
+		K = max number of nodes in path
 		j = # of times filter_paths has been called currently (starts from 0)
 		l = min # of paths to keep for each receptor-target pair
 		returns a new graph consisting of l number of candidate paths (with the smallest p-values) between each source & target pair
 		'''
-		paths = self.get_shortest_paths(K)
+		paths = self.get_shortest_paths(K, recs=recs, targets=targets)
 		self.paths = paths
 		
 		# calculate score distribution
 		scores, scores_list = self.calculate_path_score()
-		print("# of paths found with", K, "intermediate nodes =", len(scores_list))
+		print("# of paths found with up to", K, "nodes =", len(scores_list))
 		print("Make sure that path scores are normally distributed:")
-
 		# plot path score distribution (should be roughly Gaussian) & save it to file
 		plt.figure()
 		plt.hist(scores_list, bins=20)
@@ -521,19 +576,17 @@ class Graph:
 				curr_list = paths[receptor][target]
 				curr_scores = scores[receptor][target]
 				curr_pvals = []
-				for i in range(len(curr_scores)): 
+				for i in range(len(curr_scores)):
 					pval = 1 - 0.5 * (1 + math.erf((curr_scores[i] - mu) / (sigma * math.sqrt(2))))
 					curr_pvals.append(pval)
-				# sort curr_list
-				curr_pvals.sort(reverse=False)
-				if len(curr_pvals) < l:
+				pval_path_pairs = sorted(zip(curr_pvals, curr_list), key=lambda x: x[0])
+				if len(pval_path_pairs) < l:
 					remaining_paths.append(curr_list)
 					candidate_paths[receptor][target] = paths[receptor][target]
 				else:
-					keep = sorted(range(len(curr_pvals)), key=lambda x: curr_pvals[x])[:l] # want the minimal p-vals
-					to_keep = [curr_list[i] for i in keep]
+					to_keep = [path for _, path in pval_path_pairs[:l]]
 					remaining_paths.append(to_keep)
-					deleted += len(curr_pvals) - len(keep)
+					deleted += len(pval_path_pairs) - len(to_keep)
 					candidate_paths[receptor][target] = to_keep
 		print(deleted, 'paths were removed;', len(scores_list) - deleted, ' paths remain.')
 		remaining_paths = sum(remaining_paths, [])
@@ -596,21 +649,39 @@ class Graph:
 		test_remaining_paths = self.paths_list.copy()
 
 		# add first S(Q)
-		_, scores = self.calculate_path_score()
-		scores_list = scores.copy()
-		total_score = [sum(scores_list)]
-		penalty = [sum(d for _, d in test_g.degree)/test_g.number_of_nodes()]
+		scores_list = [self.path_score_for_path(self.G, path) for path in self.paths_list]
+		max_removals = max(len(scores_list) - 1, 0)
+		if i is None or i < 0 or i > max_removals:
+			i = max_removals
+		total_score_value = sum(scores_list)
+		node_counts = Counter()
+		edge_counts = Counter()
+		for path in self.paths_list:
+			node_counts.update(path)
+			edge_counts.update(self.undirected_path_edges(path))
+		active_nodes = len(node_counts)
+		active_edges = len(edge_counts)
+		total_score = [total_score_value]
+		penalty = [(2 * active_edges / active_nodes) if active_nodes > 0 else 0.0]
 
-		# remove one path at a time
-		for k in range(i):
-
-			# find index of path w/ lowest path score to remove
-			min_index = scores_list.index(min(scores_list)) # if more than one min score, will pick first one
-			del scores_list[min_index]
-			del test_remaining_paths[min_index]
-			test_g = self.temp_graph(test_remaining_paths)
-			total_score.append(sum(scores_list))
-			penalty.append((sum(d for _, d in test_g.degree)/test_g.number_of_nodes()))
+		# remove one path at a time using a fixed score order. Path scores are independent
+		# of the current subgraph, so the greedy order is the ascending score order.
+		removal_order = sorted(range(len(scores_list)), key=lambda idx: scores_list[idx])
+		for remove_idx in removal_order[:i]:
+			path = self.paths_list[remove_idx]
+			total_score_value -= scores_list[remove_idx]
+			for edge in self.undirected_path_edges(path):
+				edge_counts[edge] -= 1
+				if edge_counts[edge] == 0:
+					del edge_counts[edge]
+					active_edges -= 1
+			for node in path:
+				node_counts[node] -= 1
+				if node_counts[node] == 0:
+					del node_counts[node]
+					active_nodes -= 1
+			total_score.append(total_score_value)
+			penalty.append((2 * active_edges / active_nodes) if active_nodes > 0 else 0.0)
 		
 		# calculate lambda needed to make the score and penalty close to each other
 		lambda_pen = stats.mean(total_score)/stats.mean(penalty)
@@ -634,46 +705,51 @@ class Graph:
 		# find the "elbow"/"knee" using the kneed package
 		plt.figure()
 		plt.plot(S_Q)
-		# plot line from start to end 
-		x1 = [0, i]
-		y1 = [S_Q[0], S_Q[len(S_Q)-1]]
-		plt.plot(x1, y1)
 		plt.xlabel("Number of paths removed")
-		plt.legend(['S(Q)', 'line X'])
-		# x = number of paths removed
-		x = [k for k in range(i+1)]
-
-		# find the best "elbow"/"knee" by iterating over different sensitivites
-		print('looking for the best "elbow":')
 		best_elbow = 0
-		best_d = -math.inf
-		p1 = np.array([0, S_Q[0]])
-		p2 = np.array([i, S_Q[len(S_Q)-1]])
-		sensitivity = [1, 3, 5, 10, 100, 200, 400]
-		direction = ""
-		# get direction ('increasing'/'decreasing') of the graph
-		if S_Q[0] > S_Q[len(S_Q)-1]:
-			direction = 'decreasing'
+		if i > 0:
+			# plot line from start to end
+			x1 = [0, i]
+			y1 = [S_Q[0], S_Q[len(S_Q)-1]]
+			plt.plot(x1, y1)
+			plt.legend(['S(Q)', 'line X'])
+			# x = number of paths removed
+			x = [k for k in range(i+1)]
+
+			# find the best "elbow"/"knee" by iterating over different sensitivites
+			print('looking for the best "elbow":')
+			best_d = -math.inf
+			p1 = np.array([0, S_Q[0]])
+			p2 = np.array([i, S_Q[len(S_Q)-1]])
+			sensitivity = [1, 3, 5, 10, 100, 200, 400]
+			direction = ""
+			# get direction ('increasing'/'decreasing') of the graph
+			if S_Q[0] > S_Q[len(S_Q)-1]:
+				direction = 'decreasing'
+			else:
+				direction = 'increasing'
+			for s in sensitivity:
+				with warnings.catch_warnings():
+					warnings.filterwarnings('error')
+					try:
+						kneedle = KneeLocator(x, S_Q, curve=curve, direction=direction, S=s)
+						if kneedle.knee_y is not None:
+							num = kneedle.elbow
+							p3 = np.array([num, kneedle.knee_y])
+							# find the best elbow/knee that hars the largest Euclidean distance to line X
+							d = norm(np.cross(p2-p1, p1-p3))/norm(p2-p1)
+							if d > best_d:
+								best_elbow = num
+								best_d = d
+							print('elbow:', num, kneedle.knee_y, '; sensitivity:', s) # num paths to remove for best signaling network
+						else:
+							print('no elbow found for sensitivity:', s)
+					except Warning:
+						print('no elbow found for sensitivity:', s)
+						continue
 		else:
-			direction = 'increasing'
-		for s in sensitivity:
-			with warnings.catch_warnings():
-				warnings.filterwarnings('error')
-				try:
-					kneedle = KneeLocator(x, S_Q, curve=curve, direction=direction, S=s)
-					if kneedle.knee_y is not None:
-						num = kneedle.elbow
-						p3 = np.array([num, kneedle.knee_y])
-						# find the best elbow/knee that hars the largest Euclidean distance to line X
-						d = norm(np.cross(p2-p1, p1-p3))/norm(p2-p1)
-						if d > best_d: 
-							best_elbow = num
-							best_d = d
-						print('elbow:', num, kneedle.knee_y, '; sensitivity:', s) # num paths to remove for best signaling network
-					else: print('no elbow found for sensitivity:', s)
-				except Warning as e:
-					print('no elbow found for sensitivity:', s)
-					continue
+			plt.legend(['S(Q)'])
+			print('Only one path remains; no pruning is possible.')
 
 		print('best elbow:', best_elbow)
 		plt.axvline(x=best_elbow, c = 'r')
@@ -686,7 +762,7 @@ class Graph:
 		plt.close()
 
 		# remove the paths with the lowest scores (# of paths removed = best_elbow)
-		to_remove = sorted(range(len(scores)), key=lambda x: scores[x])[:best_elbow] # indices of paths to remove
+		to_remove = removal_order[:best_elbow]
 		local_op_paths = [self.paths_list[i] for i in range(self.num_paths) if i not in to_remove]
 		self.create_graph(self.list_to_dict(local_op_paths), local_op_paths)
 
@@ -696,7 +772,8 @@ class Graph:
 			self.local_lambda_pen = lambda_pen
 			pickle_dump(self, osp.join(self.files_dir, 'local_op_g.pickle'))
 
-		if j != -1: return lambda_pen
+		if j != -1:
+			return lambda_pen
 
 	# STEP5: find (near) global optimal solution
 	def optimal_graph(self, K, l, N, i_local, t, curve, seed, p, v):
@@ -751,6 +828,7 @@ class Graph:
 		num_0 = 0
 		num_not_0 = 0
 		for edge in edges:
+			node1, node2 = edge
 			num = 0
 			if (self.d.genes_log2fc[node1] != 0) and (self.d.genes_log2fc[node2] != 0):
 				num = int((2**(self.d.ppis[edge] + self.d.genes_log2fc[node1] + self.d.genes_log2fc[node2])) * 100) # num times this edge appears
@@ -769,6 +847,7 @@ class Graph:
 
 		total_num_no_improv = 0
 		num_no_improv = 0
+		num_below_v = 0
 
 		# get recs and targets in graph
 		# recs and targets need to stay constant
@@ -786,6 +865,8 @@ class Graph:
 			prev_g = copy.deepcopy(self.G)
 			prev_paths = copy.deepcopy(self.paths)
 			prev_paths_list = copy.deepcopy(self.paths_list)
+			prev_recs = copy.deepcopy(self.recs)
+			prev_targets = copy.deepcopy(self.targets)
 			prev_SQ = best_SQ
 			prev_scores = best_scores
 
@@ -805,7 +886,7 @@ class Graph:
 			print("added:", self.G.number_of_nodes() ,"nodes,", self.G.number_of_edges() * 2, " edges", '(' + str((j+1)*M - j*M) + ')')
 			
 			# redo STEP2 (get new paths) then do STEP3
-			self.filter_paths2(K, j, l) # keeps l number of paths for each (receptor, target) pair
+			self.filter_paths2(K, j, l, recs=recs, targets=targets) # keeps l number of paths for each (receptor, target) pair
 
 			# redo STEP3 
 			self.top_N_paths(N, False)
@@ -827,45 +908,29 @@ class Graph:
 			# otherwise continue
 			if G1_SQ <= prev_SQ: 
 				# update self to prev g
-				self.update_all(prev_g, prev_paths, prev_paths_list)
+				self.update_all(prev_g, prev_paths, prev_paths_list, prev_recs, prev_targets)
 				best_SQ = prev_SQ
 				best_scores = prev_scores
 				total_num_no_improv += 1
 				num_no_improv += 1
-				print('NO IMPROVEMENT; current best S(Q) (calculated using local lambda penalty):', best_SQ, ", num_no_improv:", num_no_improv, ', num_improv: ', num_improv)
-				if improv_list != []:
-					if num_no_improv == t or stats.mean(improv_list) < v: # have converged if have less than v percent improvement on average or have t continuous no improvements
-						
-						# plot a curve of G vs G1 S(Q) (percentage improvement)
-						self.global_SQ = best_SQ
-						print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv)
-						
-						# save optimal graph object
-						pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
-						
-						stop = timeit.default_timer()
-						print('Time needed to find the optimal graph: ', stop - start)
-						self.improv_list = improv_list
-						self.improv_iterations = improv_iterations
+				num_below_v += 1
+				print('NO IMPROVEMENT; current best S(Q) (calculated using local lambda penalty):', best_SQ, ", num_no_improv:", num_no_improv, ', num_improv: ', num_improv, ', num_below_v:', num_below_v)
+				if num_below_v == t: # have converged if have t continuous iterations with improvement < v
+					self.global_SQ = best_SQ
+					print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv, "; current # below v:", num_below_v)
 
-						if len(improv_list) > 1:
-							# plot improvement
-							self.plot_improvement()
-						return
+					# save optimal graph object
+					pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
 
-				else: # no improvements at all
-					if num_no_improv == t:
+					stop = timeit.default_timer()
+					print('Time needed to find the optimal graph: ', stop - start)
+					self.improv_list = improv_list
+					self.improv_iterations = improv_iterations
 
-						self.global_SQ = best_SQ
-						print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv)
-						
-						# save optimal graph object
-						pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
-						
-						stop = timeit.default_timer()
-						print('Time needed to find the optimal graph: ', stop - start)
-						return
-						
+					if len(improv_list) > 1:
+						self.plot_improvement()
+					return
+
 			else: 
 				# find percent improvement
 				improv = (G1_SQ - prev_SQ)/abs(prev_SQ) * 100
@@ -874,9 +939,28 @@ class Graph:
 				best_SQ = G1_SQ
 				best_scores = G1_scores
 				num_no_improv = 0 # reset
+				if improv < v:
+					num_below_v += 1
+				else:
+					num_below_v = 0
 				num_improv += 1
 				self.global_lambda_pen = lambda_pen # update global_lambda pen when there is an improvement
-				print('IMPROVEMENT:', improv, ' current best S(Q) (calculated using local lambda penalty):', best_SQ, '; num_improv:', num_improv)   
+				print('IMPROVEMENT:', improv, ' current best S(Q) (calculated using local lambda penalty):', best_SQ, '; num_improv:', num_improv, '; num_below_v:', num_below_v)
+				if num_below_v == t:
+					self.global_SQ = best_SQ
+					print(improv_list, "current # no improvement:", num_no_improv, "; total # no improvement:", total_num_no_improv, "; current # below v:", num_below_v)
+
+					# save optimal graph object
+					pickle_dump(self, osp.join(self.files_dir, '_'.join(['optimal_graph', str(l), str(N), str(t) + '.pickle'])))
+
+					stop = timeit.default_timer()
+					print('Time needed to find the optimal graph: ', stop - start)
+					self.improv_list = improv_list
+					self.improv_iterations = improv_iterations
+
+					if len(improv_list) > 1:
+						self.plot_improvement()
+					return
 		
 		# if reach max # of iterations
 		# plot a curve of G vs G1 S(Q) (percentage improvement)
@@ -903,17 +987,13 @@ class Graph:
 			scores[receptor] = {}
 			for target in paths[receptor]:
 				curr_paths = paths[receptor][target] # more than one shortest path
-				# score = product of log2fc of all nodes x product of ppi score of all edges
 				scores[receptor][target] = []
 				for path in curr_paths:
-					score = 0.0
-					for i in range(len(path)-1):
-						score += (self.gamma * float(G.nodes[path[i]]['log2fc'])) + float(G.edges[path[i], path[i+1]]['ppi']) 
-					score += self.gamma * float(G.nodes[path[len(path) - 1]]['log2fc'])
+					score = self.path_score_for_path(G, path)
 					scores[receptor][target].append(score)
 					scores_list.append(score)
 			if not scores[receptor]: # empty
-				del cores[receptor]
+				del scores[receptor]
 		return scores, scores_list
 
 	# use for ranking nodes
@@ -942,8 +1022,10 @@ class Graph:
 		# use Pool for parallel processing
 		# time amount of time it takes
 		start = timeit.default_timer()
-		p = Pool()
-		SQ_scores = p.map(self.remove_node, self.nodes)
+		workers = min(self.num_workers, max(1, len(self.nodes)))
+		chunksize = max(1, len(self.nodes) // (workers * 8))
+		p = Pool(processes=workers)
+		SQ_scores = p.map(self.remove_node, self.nodes, chunksize=chunksize)
 		p.close()
 		p.join()
 		stop = timeit.default_timer()
@@ -1082,4 +1164,3 @@ class SignificantGenes:
 				size = str(self.get_node_size(node))
 				noa_fname.write('\t'.join([node, 'internal', size]) + '\n')
 		print('.noa and .sif files have been saved for viewing optimal graph details on Cytoscape.')
-

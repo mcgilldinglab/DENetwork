@@ -31,7 +31,7 @@ from simple_tools import check_create_dir
 import tracemalloc
 
 class RunModel:
-	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, num_significant_genes, gamma, max_num_intermediate_nodes_in_shortest_paths, max_p_value_of_significant_paths, num_top_paths, percent_improvement_for_convergence, num_trys):
+	def __init__(self, script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile, num_significant_genes, gamma, max_num_intermediate_nodes_in_shortest_paths, max_p_value_of_significant_paths, num_top_paths, percent_improvement_for_convergence, num_trys, num_workers):
 		self.script_dir = script_dir
 		self.name = name
 		self.DEfile = DEfile
@@ -46,6 +46,7 @@ class RunModel:
 		self.N = num_top_paths
 		self.v = percent_improvement_for_convergence
 		self.t = num_trys
+		self.num_workers = num_workers
 		# print hyperparameters
 		print('DENetwork hyperparameters:')
 		print('gamma:', self.gamma)
@@ -54,12 +55,13 @@ class RunModel:
 		print('N:', self.N)
 		print('v:', self.v)
 		print('t:', self.t)
+		print('num_workers:', self.num_workers)
 
 	def run_model(self):
 
 		# initialize graph
 
-		g = Graph(self.script_dir, self.name, self.DEfile, self.genefile, self.TFfile, self.recepfile, self.PPIfile, self.gamma)
+		g = Graph(self.script_dir, self.name, self.DEfile, self.genefile, self.TFfile, self.recepfile, self.PPIfile, self.gamma, self.num_workers)
 
 		
 		# --------------------STEP 1--------------------
@@ -81,7 +83,7 @@ class RunModel:
 
 		# --------------------STEP 2--------------------
 		''' filter paths
-			K = # of edges in path (only paths with k # of edges are kept) between source-target pairs
+			K = max # of nodes allowed in a source-target path
 			r = True/False, whether to run shortest_path, if 'False' will assume that shortest_paths.pickle exists within the 'files' directory
 			p_val = p-value cutoff for finding significant shortest paths
 			returns a new graph w/ candidate paths of p-value < p_val
@@ -115,7 +117,7 @@ class RunModel:
 
 		# --------------------STEP 5--------------------
 		''' optimal_graph
-			K = # of edges allowed when finding the shortest path between source-target pairs
+			K = max # of nodes allowed when finding the shortest path between source-target pairs
 			l = # of paths to keep for each source-target pair in filter_paths2
 			N = # of top paths to keep
 			i_local = total number of paths to remove one by one when finding the best local optimum solution
@@ -171,11 +173,12 @@ def main():
 	
 	# optional arguments
 	parser.add_argument('-G','--gamma', required=False, default=1.0, type=float, help='Float, Optional, is 1.0 by default. Used to change how much the log2 fold changes (node attributes) influence the path score.')
-	parser.add_argument('-K', '--max_num_intermediate_nodes_in_shortest_paths', required=False, default=5, type=int, help='Integer, Optional, is 5 by default. Parameter for finding shortest paths. Is the max number of intermediate nodes allowed when finding shortest paths between source and target pairs.')
+	parser.add_argument('-K', '--max_num_intermediate_nodes_in_shortest_paths', required=False, default=5, type=int, help='Integer, Optional, is 5 by default. Parameter for finding shortest paths. Interpreted as the maximum number of nodes allowed in a source-target path, consistent with the paper.')
 	parser.add_argument('-p', '--max_p_value_of_significant_paths', required=False, default=0.01, type=float, help='Float, Optional, is 0.01 by default. Is used as a cut-off for finding significant shortest paths.')
 	parser.add_argument('-N', '--num_top_paths', required=False, default=5, type=int, help='Integer, Optional, is 5 by default. Parameter for number of top significant shortest paths kept between each source and target pair.')
 	parser.add_argument('-v', '--percent_improvement_for_convergence', required=False, default=5, type=float, help='Float, Optional, is 5.0 by default. Percent improvement required to determine convergence of global optimal solution (& to terminate iterations).')
 	parser.add_argument('-T', '--num_trys', required=False, default=5, type=int, help='Int, Optional, is 5 by default. Number of trys allowed for continuous no improvements before terminating & determining the converged solution.')
+	parser.add_argument('-P', '--num_workers', required=False, default=(os.cpu_count() or 1), type=int, help='Int, Optional. Number of worker processes used for shortest-path search and node ranking.')
 	args = parser.parse_args()
 
 	# TFfile and PPIfile are the same for all models
@@ -190,7 +193,7 @@ def main():
 	start = timeit.default_timer()
 
 	# script_dir, name, DEfile, genefile, TFfile, recepfile, PPIfile
-	r = RunModel(script_dir, args.name, args.de_file, args.gene_file, tf_file, args.recep_file, ppi_file, args.num_significant_genes, args.gamma, args.max_num_intermediate_nodes_in_shortest_paths, args.max_p_value_of_significant_paths, args.num_top_paths, args.percent_improvement_for_convergence, args.num_trys)
+	r = RunModel(script_dir, args.name, args.de_file, args.gene_file, tf_file, args.recep_file, ppi_file, args.num_significant_genes, args.gamma, args.max_num_intermediate_nodes_in_shortest_paths, args.max_p_value_of_significant_paths, args.num_top_paths, args.percent_improvement_for_convergence, args.num_trys, args.num_workers)
 	r.run_model()
 
 	stop = timeit.default_timer()
@@ -204,6 +207,3 @@ def main():
 
 if __name__=='__main__':
 	main()
-
-
-
