@@ -29,7 +29,7 @@ Python 3 is required.
 
 1. Clone or download this repository.
 
-2. Navigate to the downloaded DENetwork folder. You do not need to install this repository with `setup.py`; the scripts can be run directly from the cloned source tree.
+2. Navigate to the downloaded DENetwork folder.
 
 ```bash
 $ cd DENetwork
