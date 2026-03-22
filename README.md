@@ -27,13 +27,13 @@ Python 3 is required.
 
 1. Clone or download this repository.
 
-2. Navigate to the downloaded DENetwork folder and install required Python packages.
+2. Navigate to the downloaded DENetwork folder. You do not need to install this repository with `setup.py`; the scripts can be run directly from the cloned source tree.
 
 ```bash
 $ cd DENetwork
-$ python3 setup.py install
 ```
-3. We use OmicVerse to perform differential analysis (DESeq2-compatible workflow through PyDESeq2). One simple setup is:
+
+3. We use OmicVerse to perform differential analysis (DESeq2-compatible workflow through PyDESeq2). A practical environment for both OmicVerse and DENetwork is:
 
 ```bash
 $ conda create -n omicverse python=3.10
@@ -41,10 +41,14 @@ $ conda activate omicverse
 $ conda install pytorch torchvision torchaudio cpuonly -c pytorch
 $ conda install pyg -c pyg
 $ conda install omicverse pydeseq2 cytoolz frozendict -c conda-forge -c bioconda
-$ python -c "import omicverse"
+$ conda install networkx matplotlib scipy kneed statsmodels openpyxl -c conda-forge
+$ python -c "import omicverse, networkx, matplotlib, scipy, kneed, statsmodels, openpyxl"
 ```
 
 For GPU-based installation, or other OmicVerse environments, please also see the official [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
+
+Optional dependency:
+* `rpy2` is only required for the legacy R-based script in `DENetwork/diffexpr/py_deseq.py`. It is not needed for the OmicVerse workflow or for `DENetwork/run_denetwork.py`.
 
 You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
@@ -102,8 +106,9 @@ You can also choose to use other methods for differential gene expression analys
 **3. Run DENetwork**
 
 ```bash
-usage: run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r RECEP_FILE -t
-                        {de,tf} -s NUM_SIGNIFICANT_GENES
+usage: DENetwork/run_denetwork.py [-h] -n NAME -d DE_FILE -g GENE_FILE -r
+                                  RECEP_FILE -t {de,tf} -s
+                                  NUM_SIGNIFICANT_GENES
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -141,9 +146,9 @@ optional arguments:
 
   -K MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, --max_num_intermediate_nodes_in_shortest_paths MAX_NUM_INTERMEDIATE_NODES_IN_SHORTEST_PATHS, optional
                         Integer, Optional, is 5 by default. Parameter for
-                        finding shortest paths. Is the max number of
-                        intermediate nodes allowed when finding shortest paths
-                        between source and target pairs.
+                        finding shortest paths. Interpreted as the maximum
+                        number of nodes allowed in a source-target path,
+                        consistent with the paper.
 
   -p MAX_P_VALUE_OF_SIGNIFICANT_PATHS, --max_p_value_of_significant_paths MAX_P_VALUE_OF_SIGNIFICANT_PATHS, optional
                         Float, Optional, is 0.01 by default. Is used as a cut-
@@ -163,6 +168,10 @@ optional arguments:
                         Int, Optional, is 5 by default. Number of trys allowed
                         for continuous no improvements before terminating &
                         determining the converged solution.
+
+  -P NUM_WORKERS, --num_workers NUM_WORKERS, optional
+                        Int, Optional. Number of worker processes used for
+                        shortest-path search and node ranking.
 ```
 
 DENetwork should take a couple minutes to run.
@@ -197,11 +206,12 @@ $ python tutorial/run_omicverse_deg.py --config tutorial/configs/influenza_artic
 This command writes the influenza example outputs to `.tmp/tutorial_influenza_article_standard`.
 
 The 'data' folder contains 2 files that are mandatory for running DENetwork:
-* 'ppi_ptm_pd.hgnc.txt' contains a list of PPI scores (both protein-protein and protein-dna) 
+* 'ppi_ptm_pd_hgnc.txt' contains a list of PPI scores (both protein-protein and protein-dna) 
 * 'TFs.txt' contains a list of all TFs that are used to find significant TFs, if TFs are chosen as the target nodes
 
 ```bash
-$ python3 run_denetwork.py -n influenza -d example_deseq2_output/DE_pos_influenza.tsv -g example_deseq2_output/gene_log2fc_influenza.tsv -r example/receptors_influenza.txt -t de -s 100
+$ conda activate omicverse
+$ python DENetwork/run_denetwork.py -n influenza -d DENetwork/example_deseq2_output/DE_pos_influenza.tsv -g DENetwork/example_deseq2_output/gene_log2fc_influenza.tsv -r DENetwork/example/receptors_influenza.txt -t de -s 100
 ```
 
 You can choose either DE genes or transcription factors (TFs) as the target nodes in DENetwork. Here, DE genes are chosen using the '-t de' option. You can also choose to use either all, only upregulated, or only downregulated DE genes. Here, upregulated (pos) DE genes are chosen using the '-d example_deseq2_output/DE_pos_influenza.tsv' option. 
