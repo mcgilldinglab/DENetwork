@@ -25,17 +25,11 @@ Differential gene expression analysis of RNA-sequencing (RNA-seq) data offers cr
 
 ## Installation
 
-Python 3 is required.
-
-1. Clone or download this repository.
-
-2. Navigate to the downloaded DENetwork folder.
-
 ```bash
 $ cd DENetwork
 ```
 
-3. We use OmicVerse to perform differential analysis (DESeq2-compatible workflow through PyDESeq2). A practical environment for both OmicVerse and DENetwork is:
+A practical environment for both OmicVerse and DENetwork is:
 
 ```bash
 $ conda create -n omicverse python=3.10
@@ -48,11 +42,6 @@ $ python -c "import omicverse, networkx, matplotlib, scipy, kneed, statsmodels, 
 ```
 
 For GPU-based installation, or other OmicVerse environments, please also see the official [OmicVerse documentation](https://omicverse.readthedocs.io/en/latest/index.html).
-
-Optional dependency:
-* `rpy2` is only required for the legacy R-based script in `DENetwork/diffexpr/py_deseq.py`. It is not needed for the OmicVerse workflow or for `DENetwork/run_denetwork.py`.
-
-You can skip this step if you don't need to perform differential gene expression analysis, or are using another method (e.g. edgeR).
 
 ## Usage
 
