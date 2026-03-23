@@ -23,7 +23,10 @@ python tutorial/run_omicverse_deg.py \
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
+import re
 import sys
 from pathlib import Path
 
@@ -98,7 +101,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--gene-column",
         default="Gene",
-        help="Column containing gene symbols. Default: Gene",
+        help="Column containing gene symbols or Ensembl gene IDs. Default: Gene",
     )
     parser.add_argument(
         "--sheet-name",
@@ -280,6 +283,82 @@ def build_count_matrix(
     return counts
 
 
+ENSEMBL_GENE_PATTERNS = {
+    "human": re.compile(r"^ENSG\d+(?:\.\d+)?$"),
+    "mouse": re.compile(r"^ENSMUSG\d+(?:\.\d+)?$"),
+}
+
+GENE_MAPPING_FILES = {
+    "human": "pair_GRCh38.tsv",
+    "mouse": "pair_GRCm39.tsv",
+}
+
+
+def detect_ensembl_species(gene_values: pd.Series) -> str | None:
+    genes = gene_values.astype(str).str.strip()
+    genes = genes[genes != ""]
+    if genes.empty:
+        return None
+
+    sample = genes.head(min(len(genes), 500))
+    for species, pattern in ENSEMBL_GENE_PATTERNS.items():
+        if sample.str.match(pattern).mean() >= 0.8:
+            return species
+    return None
+
+
+@contextlib.contextmanager
+def pushd(path: Path):
+    previous = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(previous)
+
+
+def ensure_gene_mapping_file(ov, output_dir: Path, species: str) -> Path:
+    mapping_filename = GENE_MAPPING_FILES[species]
+    mapping_path = output_dir / "genesets" / mapping_filename
+    if mapping_path.exists():
+        return mapping_path
+
+    with pushd(output_dir):
+        ov.utils.download_geneid_annotation_pair()
+
+    if not mapping_path.exists():
+        raise SystemExit(
+            f"Expected OmicVerse mapping file was not created: {mapping_path}"
+        )
+    return mapping_path
+
+
+def maybe_map_gene_ids(
+    ov,
+    count_matrix: pd.DataFrame,
+    output_dir: Path,
+) -> tuple[pd.DataFrame, str | None, Path | None]:
+    detected_species = detect_ensembl_species(pd.Series(count_matrix.index))
+    if detected_species is None:
+        return count_matrix, None, None
+
+    mapping_path = ensure_gene_mapping_file(ov, output_dir, detected_species)
+
+    mapped = count_matrix.copy()
+    mapped.index = (
+        pd.Index(mapped.index)
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\.\d+$", "", regex=True)
+    )
+    mapped = ov.bulk.Matrix_ID_mapping(
+        mapped,
+        str(mapping_path),
+        keep_unmapped=False,
+    )
+    return mapped, detected_species, mapping_path
+
+
 def write_core_result_table(result: pd.DataFrame, output_path: Path) -> None:
     core = result[
         ["baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj"]
@@ -335,9 +414,7 @@ def main() -> int:
         gene_column=args.gene_column,
         sample_columns=sample_columns,
     )
-
-    count_output = output_dir / f"{args.name}_count_data.tsv"
-    count_table.to_csv(count_output, sep="\t", index=False)
+    raw_count_rows = len(count_table)
 
     metadata = pd.DataFrame(
         {
@@ -349,6 +426,16 @@ def main() -> int:
     metadata.to_csv(output_dir / f"{args.name}_meta_data.tsv", sep="\t", index=False)
 
     count_matrix = count_table.set_index(args.gene_column)
+    count_matrix, detected_ensembl_species, mapping_path = maybe_map_gene_ids(
+        ov=ov,
+        count_matrix=count_matrix,
+        output_dir=output_dir,
+    )
+
+    count_output = output_dir / f"{args.name}_count_data.tsv"
+    count_matrix.reset_index().rename(
+        columns={"index": args.gene_column}
+    ).to_csv(count_output, sep="\t", index=False)
 
     dds = ov.bulk.pyDEG(count_matrix)
     deduplicated_counts = dds.drop_duplicates_index()
@@ -415,7 +502,15 @@ def main() -> int:
     print("Output directory:", output_dir)
     print("Treatment samples:", treatment_columns)
     print("Control samples:", control_columns)
-    print("Raw count rows:", len(count_table))
+    print("Raw count rows:", raw_count_rows)
+    if detected_ensembl_species is None:
+        print("Gene ID mapping:", "not required")
+    else:
+        print(
+            "Gene ID mapping:",
+            f"detected {detected_ensembl_species} Ensembl IDs and mapped them with {mapping_path}",
+        )
+        print("Rows after gene ID mapping:", len(count_matrix))
     print("Deduplicated rows used for DE:", len(deduplicated_counts))
     print("Rows in res_matrix:", len(result))
     print("Minimum baseMean filter:", args.min_base_mean)

@@ -41,6 +41,7 @@ When information is missing, ask in this order:
 - Accept `.tsv`, `.txt`, `.csv`, `.xlsx`, or `.xls`.
 - Require one gene-symbol column plus one column per sample.
 - Require integer counts for the sample columns.
+- Accept either gene symbols or Ensembl gene IDs such as `ENSG...` or `ENSMUSG...`.
 - If the table is already in the format expected by `tutorial/run_omicverse_deg.py`, use it directly.
 - If the table is close but not quite correct, reshape it into a wide count matrix with:
   - one gene column
@@ -48,6 +49,13 @@ When information is missing, ask in this order:
   - integer count values
 
 If the matrix is not raw counts, stop and tell the user that OmicVerse DESeq2 expects raw integer counts.
+
+If the gene column looks like Ensembl gene IDs:
+
+- Detect `ENSG...` as human and `ENSMUSG...` as mouse.
+- Use OmicVerse gene ID mapping before differential expression.
+- Prefer `ov.utils.download_geneid_annotation_pair()` and `ov.bulk.Matrix_ID_mapping(...)`.
+- Export DENetwork-ready files after mapping to gene symbols.
 
 ## Infer the sample groups
 

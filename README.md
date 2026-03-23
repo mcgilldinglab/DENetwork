@@ -138,7 +138,7 @@ This is human data.       # or mouse data
 Use this receptor file: <path>.  # or generate one from CellTalkDB
 ```
 
-If you use Codex locally, the same workflow is also available as the `$denetwork-rnaseq` skill.
+The repository also includes the reusable workflow skill at `skills/denetwork-rnaseq/`.
 
 Provide these items whenever possible:
 * the input count matrix
@@ -149,13 +149,7 @@ Provide these items whenever possible:
 
 If a receptor list is not available, the workflow can generate one from the bundled CellTalkDB files in `DENetwork/data/celltalkdb/`. Species can often be inferred, but control and treatment samples should be stated explicitly.
 
-To use the repository copy directly with Codex, point to the skill path explicitly:
-
-```text
-Use $denetwork-rnaseq at /path/to/DENetwork/skills/denetwork-rnaseq on <count_matrix>.
-```
-
-To make it auto-discoverable in Codex, copy or symlink the folder into `~/.codex/skills/`.
+Gene identifiers can be either gene symbols or Ensembl gene IDs. If the input gene column contains `ENSG...` or `ENSMUSG...`, the workflow will map them to gene symbols with OmicVerse before exporting DENetwork-ready files.
 
 
 ## Example
