@@ -48,6 +48,8 @@ The repository is organized around the files needed for the OmicVerse + DENetwor
 * `DENetwork/simple_tools.py`: helper functions
 * `DENetwork/data/ppi_ptm_pd_hgnc.txt`: default human prior network
 * `DENetwork/data/ppi_biogrid_mouse.txt`: default mouse prior network
+* `DENetwork/data/celltalkdb/human_lr_pair.txt`: bundled CellTalkDB human ligand-receptor pairs
+* `DENetwork/data/celltalkdb/mouse_lr_pair.txt`: bundled CellTalkDB mouse ligand-receptor pairs
 * `DENetwork/example/`: influenza example input files
 * `tutorial/run_omicverse_deg.py`: OmicVerse differential expression script
 * `tutorial/configs/influenza_article_standard.json`: example OmicVerse config
@@ -145,7 +147,7 @@ Provide these items whenever possible:
 * the species (`human` or `mouse`)
 * a receptor list, if you already have one
 
-If a receptor list is not available, the skill can generate one from CellTalkDB. Species can often be inferred, but control and treatment samples should be stated explicitly.
+If a receptor list is not available, the workflow can generate one from the bundled CellTalkDB files in `DENetwork/data/celltalkdb/`. Species can often be inferred, but control and treatment samples should be stated explicitly.
 
 To use the repository copy directly with Codex, point to the skill path explicitly:
 

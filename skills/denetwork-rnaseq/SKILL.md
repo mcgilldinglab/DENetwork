@@ -99,18 +99,21 @@ If the user already provided a receptor file, do not replace it with CellTalkDB.
 
 If no receptor list is available, auto-curate it:
 
-- Download the species-specific CellTalkDB ligand-receptor table.
+- Prefer the repository copies:
+  - `DENetwork/data/celltalkdb/mouse_lr_pair.txt`
+  - `DENetwork/data/celltalkdb/human_lr_pair.txt`
+- Download the species-specific CellTalkDB ligand-receptor table only if the local copy is missing.
 - Extract the `receptor_gene_symbol` column.
 - Uppercase the symbols to match DENetwork's internal normalization.
 - Intersect them with the genes present in the expression matrix.
 - Write the result to a temporary receptor file and use that file for DENetwork.
 
-Use these CellTalkDB downloads:
+Use these CellTalkDB ligand-receptor tables:
 
 - `mouse_lr_pair.txt`
 - `human_lr_pair.txt`
 
-The download endpoint is the CellTalkDB `handler/download.php` form target, not a stable static file URL. Recreate the POST request if needed.
+If a download is required, the endpoint is the CellTalkDB `handler/download.php` form target, not a stable static file URL. Recreate the POST request if needed.
 
 ## Run OmicVerse differential expression
 
