@@ -113,6 +113,39 @@ Output files are written to:
 * `DENetwork/files/<model_name>/`
 * `DENetwork/figures/<model_name>/`
 
+**3. Use with an assistant (optional)**
+
+You can hand the workflow to any capable LLM assistant as a structured prompt. The assistant should:
+* inspect the count matrix format
+* confirm which samples are controls and which are treatments
+* ask whether to use upregulated or downregulated targets
+* determine whether the dataset is human or mouse
+* use a provided receptor list, or generate one from CellTalkDB if none is available
+* run OmicVerse first and DENetwork second
+
+A useful prompt template is:
+
+```text
+Use this RNA-seq count matrix to run OmicVerse differential expression and then DENetwork.
+Input file: <count_matrix>
+Controls are <control samples>.
+Treatments are <treatment samples>.
+Use upregulated targets.  # or downregulated targets
+This is human data.       # or mouse data
+Use this receptor file: <path>.  # or generate one from CellTalkDB
+```
+
+If you use Codex locally, the same workflow is also available as the `$denetwork-rnaseq` skill.
+
+Provide these items whenever possible:
+* the input count matrix
+* which samples are controls and which are treatments
+* whether to use upregulated or downregulated targets
+* the species (`human` or `mouse`)
+* a receptor list, if you already have one
+
+If a receptor list is not available, the skill can generate one from CellTalkDB. Species can often be inferred, but control and treatment samples should be stated explicitly.
+
 
 ## Example
 
