@@ -51,6 +51,7 @@ The repository is organized around the files needed for the OmicVerse + DENetwor
 * `DENetwork/example/`: influenza example input files
 * `tutorial/run_omicverse_deg.py`: OmicVerse differential expression script
 * `tutorial/configs/influenza_article_standard.json`: example OmicVerse config
+* `skills/denetwork-rnaseq/`: reusable assistant skill for the end-to-end RNA-seq workflow
 
 ## Usage
 
@@ -145,6 +146,14 @@ Provide these items whenever possible:
 * a receptor list, if you already have one
 
 If a receptor list is not available, the skill can generate one from CellTalkDB. Species can often be inferred, but control and treatment samples should be stated explicitly.
+
+To use the repository copy directly with Codex, point to the skill path explicitly:
+
+```text
+Use $denetwork-rnaseq at /path/to/DENetwork/skills/denetwork-rnaseq on <count_matrix>.
+```
+
+To make it auto-discoverable in Codex, copy or symlink the folder into `~/.codex/skills/`.
 
 
 ## Example

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DENetwork RNA-seq"
+  short_description: "Run OmicVerse and DENetwork from counts."
+  default_prompt: "Use $denetwork-rnaseq to take an RNA-seq count table through OmicVerse differential expression and DENetwork end to end."
