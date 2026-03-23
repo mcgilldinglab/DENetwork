@@ -114,7 +114,7 @@ Output files are written to:
 * `DENetwork/files/<model_name>/`
 * `DENetwork/figures/<model_name>/`
 
-**3. Use with an assistant (optional)**
+**3. ❗ Recommended: Use with an assistant**
 
 You can hand the workflow to any capable LLM assistant as a structured prompt. The assistant should:
 * inspect the count matrix format
