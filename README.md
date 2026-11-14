@@ -6,7 +6,7 @@ Unveiling regulatory and signaling networks behind differentially-expressed gene
   * [Repository Layout](#repository-layout)
   * [Usage](#usage)
   * [Example](#example)
-  * [License](#license)
+  * [License](#licensing)
   * [Credits](#credits)
   * [Contact](#contact)
   * [Citation](#citation)
@@ -181,8 +181,14 @@ To systematically identify statistically significant key genes from DENetwork re
 
 Please use the provided random PPI network files to run DENetwork to generate the background score distribution, and select key genes with DENetwork scores above the 5% of this background as significant candidates.
 
-## License
-DENetwork is licensed under the terms of the MIT license.
+## Licensing
+
+DENetwork is offered under two licensing options:
+
+- **Noncommercial:** [PolyForm Noncommercial License 1.0.0](LICENSE-NONCOMMERCIAL.txt), under its complete, unmodified terms.
+- **Commercial:** uses outside those permissions require a separate written agreement with the copyright holders or their authorized representatives. Contact [jun.ding@mcgill.ca](mailto:jun.ding@mcgill.ca).
+
+See [LICENSE](LICENSE) and [commercial licensing](COMMERCIAL-LICENSING.md) for scope and details. Earlier licenses and third-party notices remain applicable to the material they cover. This is a source-available licensing model with a noncommercial restriction; it is not an OSI open-source license.
 
 ## Credits
 DENetwork was developed by the Ding Lab @ McGill University.
